@@ -32,17 +32,20 @@ def _new_prove_bsd_2(E, an, verbosity=0):
                            f"The analytic rank is {an} and we found the following "
                            f"independent points : {pts}")
 
-    if len(pts) != an:  # happens only if an=1 and no points were found
-        if verbosity>1:
-            print("No point found on this rank 1 curve. Using Heenger points")
-        pts = [ep.ellheegner()]
+    # if len(pts) != an:  # happens only if an=1 and no points were found
+    #     if verbosity>1:
+    #         print("No point found on this rank 1 curve. Using Heenger points")
+    #     pts = [ep.ellheegner()]
+    #
+    # if len(pts) == 1:
+    #     gens = [ E.point([ QQ(pts[0][0]), QQ(pts[0][1]) ], check=True) ]
+    #     gens = E.saturation(gens)[0]
+    #     rank = 1
+    # else:
+    #     rank = 0
 
-    if len(pts) == 1:
-        gens = [ E.point([ QQ(pts[0][0]), QQ(pts[0][1]) ], check=True) ]
-        gens = E.saturation(gens)[0]
-        rank = 1
-    else:
-        rank = 0
+    # We know by Kolyvagin-Gross-Zagier that the rank is equal to the analytic rank.
+    rank = an
 
     # this is the dimension of Sha[2]
     sel2 = rank_upper_bd + s - rank
@@ -161,7 +164,7 @@ def _new_prove_bsd_cm(E, verbosity=0):
         raise RuntimeError("Called _new_prove_bsd_cm with a curve of analytic rank > 1. This is a bug.")
 
 
-def new_prove_BSD(E,
+def new_prove_bsd(E,
                   verbosity=0,
                   two_desc='mwrank',
                   proof=None):
@@ -358,7 +361,7 @@ def new_prove_BSD(E,
 
     # first treat CM curves
     if E.has_cm():
-        return _new_prove_BSD_cm(E, verbosity=verbosity, two_desc=two_desc)
+        return _new_prove_bsd_cm(E, verbosity=verbosity, two_desc=two_desc)
 
     # now curve is not cm
     attwo = _new_prove_bsd_2(E2, an, verbosity=verbosity)
