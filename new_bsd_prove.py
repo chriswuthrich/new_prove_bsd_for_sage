@@ -160,6 +160,43 @@ def burungale_skinner_tian_wan_thm15(E,p, verbosity=0):
             else:
                 return False
 
+def _new_prove_bsd_2(E,
+                     two_desc='mwrank'):
+    """
+    Check BSD(E,2) using the two-descent.
+    """
+    return False
+
+
+def _new_prove_bsd_cm(E, verbosity=0, two_desc='mwrank'):
+    non_max_j_invs = [ -12288000, 54000, 287496, 16581375 ]
+    if E.j_invariant() in non_max_j_invs:
+        if verbosity > 0:
+            print('CM by non maximal order: switching curves')
+        E2 = next(C for C in E.isogeny_class().curves if C.j_invariant() not in non_max_j_invs)
+    else:
+        E2 = E
+    an = E2.analytic_rank()
+    attwo = _new_prove_bsd_2(E2)
+    if an == 0:
+        # by the first main Theorem in Rubin's 1991 article The "main conjectures" of Iwasawa theory for imaginary quadratic fields.
+        # only primes diving the order of the units in End
+        res = [2] if attwo else []
+        if E2.j_invariant() == 0:
+            res.append(3)
+        return res
+    elif an == 1:
+        return NotImplementedError("This is not implemented yet.")
+    else: # an> 1
+        # We should not be calling this function for curves with analytic rank > 1.
+        # This is a bug.
+        raise RuntimeError("Called _new_prove_bsd_cm with a curve of analytic rank > 1. This is a bug.")
+
+
+
+
+
+    return True
 
 def new_prove_BSD(E,
                   verbosity=0,
@@ -348,21 +385,22 @@ def new_prove_BSD(E,
         True for p not in {2} by Kolyvagin.
         []
     """
-
-    # first treat CM curves
-    if E.has_cm():
-        return True
-    # now curve is not cm
     # no hope to prove anything if analytic rank is >1
     an = E.analytic_rank()
     if an > 1:
         from sage.sets.primes import Primes
         return Primes()
 
+    # first treat CM curves
+    if E.has_cm():
+        return _new_prove_BSD_cm(E, verbosity=verbosity, two_desc=two_desc)
+
+    # now curve is not cm
+
 if __name__ == "__main__":
     for la in ['11a', '14a', '20a1', '50b1', '389a',
                '19a', '37a', '123a1', '681b', '198b',
                '26b', '438e1', '960d1', '66b3']:
         E = EllipticCurve(la)
-        print(f"Curve: {E.label()} \n {E.prove_BSD()} \n")
+        print(f"Curve: {E.label()} \n old prove_BSD :: {E.prove_BSD()} \n")
     print("Done.")
