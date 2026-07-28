@@ -5,3 +5,5 @@ This is related to the pull request
 https://github.com/sagemath/sage/pull/42397/files
 
 for sage. It proposes a complete rewrite of the function prove_BSD instead.
+
+This is VERY MUCH a work in progress.

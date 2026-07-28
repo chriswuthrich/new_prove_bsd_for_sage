@@ -5,94 +5,69 @@ from sage.all import *
 from sage.rings.integer_ring import ZZ
 from sage.rings.rational_field import QQ
 
-def pari_two_descent_work(E) -> tuple:
-    r"""
-    Prepare the output from pari by two-isogeny.
 
-    INPUT:
 
-    - ``E`` -- an elliptic curve
-
-    OUTPUT: a tuple of 5 elements with the first 4 being integers
-
-    - a lower bound on the rank
-
-    - an upper bound on the rank
-
-    - a lower bound on the rank of Sha[2]
-
-    - an upper bound on the rank of Sha[2]
-
-    - a list of the generators found
-
-    EXAMPLES::
-
-        sage: from sage.schemes.elliptic_curves.BSD import pari_two_descent_work
-        sage: E = EllipticCurve('14a')
-        sage: pari_two_descent_work(E)
-        (0, 0, 0, 0, [])
-        sage: E = EllipticCurve('37a')
-        sage: pari_two_descent_work(E) # random, up to sign
-        (1, 1, 0, 0, [(0 : -1 : 1)])
-        sage: E = EllipticCurve('210e7')
-        sage: pari_two_descent_work(E)
-        (0, 2, 0, 2, [])
-        sage: E = EllipticCurve('66b3')
-        sage: pari_two_descent_work(E)
-        (0, 0, 2, 2, [])
+def _new_prove_bsd_2(E, an, verbosity=0):
     """
+    Check BSD(E,2) using the two-descent.
+    This function is only called if the analytic rank is <= 1
+    and that must be equal to the argument ``an``.
+    """
+    if an > 1:
+        raise RuntimeError("This function should only be called if the analytic rank is <= 1")
     ep = E.pari_curve()
     lower, rank_upper_bd, s, pts = ep.ellrank()
-    gens = sorted([E.point([QQ(x[0]), QQ(x[1])], check=True) for x in pts])
-    gens = E.saturation(gens)[0]
     # this is explained in the pari-gp documentation:
     # s is the dimension of Sha[2]/2Sha[4],
     # which is a lower bound for dim Sha[2]
-    # dim Sha[2] = dim Sel2 - rank E(Q) - dim tors
-    # rank_upper_bd = dim Sel_2 - dim tors - s
-    sha_upper_bd = rank_upper_bd - len(gens) + s
-    return len(gens), rank_upper_bd, s, sha_upper_bd, gens
+    if verbosity>1:
+        print(f"The two-descent gives the following information: {lower} <= rank <= {rank_upper_bd},"
+              f"dim Sha[2]/2Sha[4] = {s} and the following points were found: {pts}")
 
+    # sanity checks
+    if (lower > rank_upper_bd or lower != len(pts) or
+        lower > an or rank_upper_bd < an or len(pts) > 1):
+        raise RuntimeError(f"The two-descent failed for this curve. "
+                           f"The lower bound is {lower} and the upper bound is {rank_upper_bd}. "
+                           f"The analytic rank is {an} and we found the following "
+                           f"independent points : {pts}")
 
-def mwrank_two_descent_work(E, two_tor_rk) -> tuple:
-    """
-    Prepare the output from mwrank two-descent.
+    if len(pts) != an:  # happens only if an=1 and no points were found
+        if verbosity>1:
+            print("No point found on this rank 1 curve. Using Heenger points")
+        pts = [ep.ellheegner()]
 
-    INPUT:
+    if len(pts) == 1:
+        gens = [ E.point([ QQ(pts[0][0]), QQ(pts[0][1]) ], check=True) ]
+        gens = E.saturation(gens)[0]
+        rank = 1
+    else:
+        rank = 0
 
-    - ``E`` -- an elliptic curve
+    # this is the dimension of Sha[2]
+    sel2 = rank_upper_bd + s - rank
+    if sel2 == s:
+        # this implies that 2Sha[4]=0 and hence Sha[4] = Sha[2] is all of the 2-primary
+        # part of Sha
+        if sel2 == E.sha().an().ord(2):
+            if verbosity>0:
+                print(f"BSD(E,2) holds thanks to a 2-descent calculation.")
+            return True
+        else:
+            print(f"It appears that BSD(E,2) does not holds for this curve. "
+                  f"This is either a counterexample to BSD or, more likely, a bug. "
+                  f"The dimension of Sha[2] is {sel2}, which must be all of Sha[2^oo], "
+                  f"but the analytic order of Sha is {E.sha().an()}.")
+            return False
+    else:
+        # in this case Sha[4] is non-trivial. We cannot determine
+        # the order of Sha[2^oo] and we cannot conclude if BSD(E,2) holds.
+        if verbosity>0:
+            print(f"We cannot conclude that BSD(E,2) holds using a 2-descent. "
+                  f"The 2-primary part of Sha contains at least {2**(2*sel2-s)} elements "
+                  f"and the analytic order of Sha is {E.sha().an()}.")
+        return False
 
-    - ``two_tor_rk`` -- its two-torsion rank
-
-    OUTPUT:
-
-    - a lower bound on the rank
-
-    - an upper bound on the rank
-
-    - a lower bound on the rank of Sha[2]
-
-    - an upper bound on the rank of Sha[2]
-
-    - a list of the generators found
-
-    EXAMPLES::
-
-        sage: from sage.schemes.elliptic_curves.BSD import mwrank_two_descent_work
-        sage: E = EllipticCurve('14a')
-        sage: mwrank_two_descent_work(E, E.two_torsion_rank())
-        (0, 0, 0, 0, [])
-        sage: E = EllipticCurve('37a')
-        sage: mwrank_two_descent_work(E, E.two_torsion_rank())
-        (1, 1, 0, 0, [(0 : -1 : 1)])
-    """
-    MWRC = E.mwrank_curve()
-    rank_upper_bd = MWRC.rank_bound()
-    rank_lower_bd = MWRC.rank()
-    gens = [E(P) for P in MWRC.gens()]
-    sha2_lower_bd = MWRC.selmer_rank() - two_tor_rk - rank_upper_bd
-    sha2_upper_bd = MWRC.selmer_rank() - two_tor_rk - rank_lower_bd
-    return rank_lower_bd, rank_upper_bd, sha2_lower_bd, sha2_upper_bd, gens
 
 
 def burungale_skinner_tian_wan_thm19(E, p, verbosity=0):
@@ -160,15 +135,8 @@ def burungale_skinner_tian_wan_thm15(E,p, verbosity=0):
             else:
                 return False
 
-def _new_prove_bsd_2(E,
-                     two_desc='mwrank'):
-    """
-    Check BSD(E,2) using the two-descent.
-    """
-    return False
 
-
-def _new_prove_bsd_cm(E, verbosity=0, two_desc='mwrank'):
+def _new_prove_bsd_cm(E, verbosity=0):
     non_max_j_invs = [ -12288000, 54000, 287496, 16581375 ]
     if E.j_invariant() in non_max_j_invs:
         if verbosity > 0:
@@ -177,7 +145,7 @@ def _new_prove_bsd_cm(E, verbosity=0, two_desc='mwrank'):
     else:
         E2 = E
     an = E2.analytic_rank()
-    attwo = _new_prove_bsd_2(E2)
+    attwo = _new_prove_bsd_2(E2, an, verbosity=verbosity)
     if an == 0:
         # by the first main Theorem in Rubin's 1991 article The "main conjectures" of Iwasawa theory for imaginary quadratic fields.
         # only primes diving the order of the units in End
@@ -192,11 +160,6 @@ def _new_prove_bsd_cm(E, verbosity=0, two_desc='mwrank'):
         # This is a bug.
         raise RuntimeError("Called _new_prove_bsd_cm with a curve of analytic rank > 1. This is a bug.")
 
-
-
-
-
-    return True
 
 def new_prove_BSD(E,
                   verbosity=0,
@@ -389,6 +352,8 @@ def new_prove_BSD(E,
     an = E.analytic_rank()
     if an > 1:
         from sage.sets.primes import Primes
+        if verbosity > 0:
+            print(f"Cannot verify BSD(E,p) for any prime p as the analytic rank is > 1.")
         return Primes()
 
     # first treat CM curves
@@ -396,6 +361,12 @@ def new_prove_BSD(E,
         return _new_prove_BSD_cm(E, verbosity=verbosity, two_desc=two_desc)
 
     # now curve is not cm
+    attwo = _new_prove_bsd_2(E2, an, verbosity=verbosity)
+    # resulting list of primes is stored in res
+    res = [] if attwo else [2]
+
+    return res
+
 
 if __name__ == "__main__":
     for la in ['11a', '14a', '20a1', '50b1', '389a',
@@ -403,4 +374,6 @@ if __name__ == "__main__":
                '26b', '438e1', '960d1', '66b3']:
         E = EllipticCurve(la)
         print(f"Curve: {E.label()} \n old prove_BSD :: {E.prove_BSD()} \n")
+        if E.analytic_rank() < 2:
+              print(f"{_new_prove_bsd_2(E, E.analytic_rank(), verbosity=2)}\n")
     print("Done.")
