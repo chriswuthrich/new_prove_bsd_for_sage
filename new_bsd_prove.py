@@ -2,7 +2,7 @@
 from sage.all import *
 
 
-from sage.rings.integer_ring import ZZ
+# from sage.rings.integer_ring import ZZ
 from sage.rings.rational_field import QQ
 
 
@@ -12,6 +12,8 @@ def _new_prove_bsd_2(E, an, verbosity=0):
     Check BSD(E,2) using the two-descent.
     This function is only called if the analytic rank is <= 1
     and that must be equal to the argument ``an``.
+
+    Returns a boolean, which is True if BDS(E,2) is proven, and a list of points.
     """
     if an > 1:
         raise RuntimeError("This function should only be called if the analytic rank is <= 1")
@@ -32,17 +34,12 @@ def _new_prove_bsd_2(E, an, verbosity=0):
                            f"The analytic rank is {an} and we found the following "
                            f"independent points : {pts}")
 
-    # if len(pts) != an:  # happens only if an=1 and no points were found
-    #     if verbosity>1:
-    #         print("No point found on this rank 1 curve. Using Heenger points")
-    #     pts = [ep.ellheegner()]
-    #
-    # if len(pts) == 1:
-    #     gens = [ E.point([ QQ(pts[0][0]), QQ(pts[0][1]) ], check=True) ]
-    #     gens = E.saturation(gens)[0]
-    #     rank = 1
-    # else:
-    #     rank = 0
+
+    if len(pts) == 1:
+        gens = [ E.point([ QQ(pts[0][0]), QQ(pts[0][1]) ], check=True) ]
+        gens = E.saturation(gens)[0]
+    else:
+        gens = []
 
     # We know by Kolyvagin-Gross-Zagier that the rank is equal to the analytic rank.
     rank = an
@@ -55,13 +52,13 @@ def _new_prove_bsd_2(E, an, verbosity=0):
         if sel2 == E.sha().an().ord(2):
             if verbosity>0:
                 print(f"BSD(E,2) holds thanks to a 2-descent calculation.")
-            return True
+            return True, gens
         else:
             print(f"It appears that BSD(E,2) does not holds for this curve. "
                   f"This is either a counterexample to BSD or, more likely, a bug. "
                   f"The dimension of Sha[2] is {sel2}, which must be all of Sha[2^oo], "
                   f"but the analytic order of Sha is {E.sha().an()}.")
-            return False
+            return False, gens
     else:
         # in this case Sha[4] is non-trivial. We cannot determine
         # the order of Sha[2^oo] and we cannot conclude if BSD(E,2) holds.
@@ -69,7 +66,7 @@ def _new_prove_bsd_2(E, an, verbosity=0):
             print(f"We cannot conclude that BSD(E,2) holds using a 2-descent. "
                   f"The 2-primary part of Sha contains at least {2**(2*sel2-s)} elements "
                   f"and the analytic order of Sha is {E.sha().an()}.")
-        return False
+        return False, gens
 
 
 
@@ -148,7 +145,7 @@ def _new_prove_bsd_cm(E, verbosity=0):
     else:
         E2 = E
     an = E2.analytic_rank()
-    attwo = _new_prove_bsd_2(E2, an, verbosity=verbosity)
+    attwo, _ = _new_prove_bsd_2(E2, an, verbosity=verbosity)
     if an == 0:
         # by the first main Theorem in Rubin's 1991 article The "main conjectures" of Iwasawa theory for imaginary quadratic fields.
         # only primes diving the order of the units in End
@@ -165,9 +162,7 @@ def _new_prove_bsd_cm(E, verbosity=0):
 
 
 def new_prove_bsd(E,
-                  verbosity=0,
-                  two_desc='mwrank',
-                  proof=None):
+                  verbosity=0):
     r"""
     Attempt to prove the Birch and Swinnerton-Dyer conjectural
     formula for `E`, returning a list of primes `p` for which this
@@ -186,13 +181,6 @@ def new_prove_bsd(E,
       - 0: print nothing
       - 1: print sketch of proof
       - 2: print information about remaining primes
-
-    - ``two_desc`` -- string (default: ``'mwrank'``); what to use for the
-      two-descent. Options are ``'mwrank' or 'pari'
-
-    - ``proof`` -- boolean or ``None`` (default: None, see
-      proof.elliptic_curve or sage.structure.proof). If ``False``, this
-      function just immediately returns the empty list.
 
      EXAMPLES::
 
@@ -361,12 +349,31 @@ def new_prove_bsd(E,
 
     # first treat CM curves
     if E.has_cm():
-        return _new_prove_bsd_cm(E, verbosity=verbosity, two_desc=two_desc)
+        return _new_prove_bsd_cm(E, verbosity=verbosity)
 
     # now curve is not cm
-    attwo = _new_prove_bsd_2(E2, an, verbosity=verbosity)
+    # bsd_p is invariant under isogeny.
+    # the best curve in the isoclass is the one with the smallest analytic order of sha.
+    E2 = min(E.isogeny_class().curves, key=lambda C: C.sha().an())
+    attwo, gens = _new_prove_bsd_2(E2, an, verbosity=verbosity)
     # resulting list of primes is stored in res
     res = [] if attwo else [2]
+
+    if an == 0:
+        # we know that BSD(E,p) holds if Kato's thm 14.5 holds
+        # and the analytic order of sha is not
+        # divisible by p
+        # Kato's theorem 14.5 requires p>2, potentially good reduction and
+        # surjectivity of the representation on E[p]
+        primes_to_test = Set(E2.galois_representation().not_surjective())
+        primes_to_test += Set(E.sha().an().prime_divisors())
+        primes_to_test += Set(E.j_invariant().denominator().prime_divisors())
+        primes_to_test = primes_to_test.difference(Set([2]))
+    else: # an == 1
+        raise NotImplementedError("")
+    
+    if verbosity > 1:
+        print(f"Primes left to test: {primes_to_test}")
 
     return res
 
