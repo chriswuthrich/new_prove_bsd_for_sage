@@ -1,4 +1,30 @@
+r"""
+This is a new attempt to implement prove_BSD function for elliptic curves
+defined over Q.
+The name is also debatable, since it returns a list of primes where
+it cannot prove it.
 
+Here the sage issue : https://github.com/sagemath/sage/pull/42397
+and the one for the lmfdb: https://github.com/LMFDB/lmfdb/issues/7045
+
+Issues:
+* We have to check if all is proven. sha.an needs the Manin constant to be 1 or 2.
+* Should check if L>0 for full BSD.
+* Find more resources, decide if unpublished preprints are ok.
+* Should we check an=rank for rank 2 and 3 curves?
+* cm an=1 case
+
+Preliminary list of references:
+[BSTW] Ashay Burungale, Christopher Skinner, Ye Tian, Xin Wan, Zeta elements for elliptic curves and applications, https://arxiv.org/abs/2409.01350, unpublished
+[BT] Ashay A. Burungale, Ye Tian, A rank zero p-converse to a theorem of Gross--Zagier, Kolyvagin and Rubin, https://arxiv.org/abs/2506.03465, Annals of Maths
+[R] Karl Rubin,The 'main conjectures' of Iwasawa theory for imaginary quadratic fields., https://eudml.org/doc/143852, Inventiones mathematicae (1991) Volume: 103, Issue: 1, page 25-68
+[CGLS] Francesc Castella, Giada Grossi, Jaehoon Lee, Christopher Skinner, On the anticyclotomic Iwasawa theory of rational elliptic curves at Eisenstein primes, https://arxiv.org/abs/2008.02571, Inventiones math
+[CGS] Francesc Castella, Giada Grossi, Christopher Skinner, Mazur's main conjecture at Eisenstein primes, https://arxiv.org/abs/2303.04373, Math Ann.
+
+
+[KY]  Timo Keller, Mulun Yin, On the anticyclotomic Iwasawa theory of newforms at Eisenstein primes of semistable reduction, https://arxiv.org/abs/2402.12781, unpublished and I trust it less
+
+"""
 from sage.all import *
 
 
