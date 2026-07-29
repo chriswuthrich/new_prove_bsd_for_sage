@@ -366,12 +366,12 @@ def new_prove_bsd(E,
         # Kato's theorem 14.5 requires p>2, potentially good reduction and
         # surjectivity of the representation on E[p]
         primes_to_test = Set(E2.galois_representation().not_surjective())
-        primes_to_test += Set(E.sha().an().prime_divisors())
-        primes_to_test += Set(E.j_invariant().denominator().prime_divisors())
+        primes_to_test += Set(E2.sha().an().prime_divisors())
+        primes_to_test += Set(E2.j_invariant().denominator().prime_divisors())
         primes_to_test = primes_to_test.difference(Set([2]))
     else: # an == 1
         raise NotImplementedError("")
-    
+
     if verbosity > 1:
         print(f"Primes left to test: {primes_to_test}")
 
