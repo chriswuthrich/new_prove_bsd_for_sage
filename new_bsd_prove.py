@@ -18,8 +18,10 @@ Preliminary list of references:
 [BSTW] Ashay Burungale, Christopher Skinner, Ye Tian, Xin Wan, Zeta elements for elliptic curves and applications, https://arxiv.org/abs/2409.01350, unpublished
 [BT] Ashay A. Burungale, Ye Tian, A rank zero p-converse to a theorem of Gross--Zagier, Kolyvagin and Rubin, https://arxiv.org/abs/2506.03465, Annals of Maths
 [R] Karl Rubin,The 'main conjectures' of Iwasawa theory for imaginary quadratic fields., https://eudml.org/doc/143852, Inventiones mathematicae (1991) Volume: 103, Issue: 1, page 25-68
-[CGLS] Francesc Castella, Giada Grossi, Jaehoon Lee, Christopher Skinner, On the anticyclotomic Iwasawa theory of rational elliptic curves at Eisenstein primes, https://arxiv.org/abs/2008.02571, Inventiones math
-[CGS] Francesc Castella, Giada Grossi, Christopher Skinner, Mazur's main conjecture at Eisenstein primes, https://arxiv.org/abs/2303.04373, Math Ann.
+[CGLS] Francesc Castella, Giada Grossi, Jaehoon Lee, Christopher Skinner, On the anticyclotomic Iwasawa theory of rational elliptic curves at Eisenstein primes, https://arxiv.org/abs/2008.02571, Invent. Math. 227 (2022), no. 2, 517–580.
+[CGS] Francesc Castella, Giada Grossi, Christopher Skinner, Mazur's main conjecture at Eisenstein primes, https://arxiv.org/abs/2303.04373, Math. Ann. 393 (2025), no. 2, 2451–2506.
+[K] Kazuya Kato,
+[C] Francesc Castella, On the p-part of the Birch-Swinnerton-Dyer formula for multiplicative primes. Camb. J. Math. 6 (2018), no. 1, 1–23. With erratum at https://web.math.ucsb.edu/~castella/Birch-erratum.pdf
 
 
 [KY]  Timo Keller, Mulun Yin, On the anticyclotomic Iwasawa theory of newforms at Eisenstein primes of semistable reduction, https://arxiv.org/abs/2402.12781, unpublished and I trust it less
@@ -60,7 +62,7 @@ def _new_prove_bsd_2(E, an, verbosity=0):
                            f"The analytic rank is {an} and we found the following "
                            f"independent points : {pts}")
 
-
+    # Not sure if we need the point later
     if len(pts) == 1:
         gens = [ E.point([ QQ(pts[0][0]), QQ(pts[0][1]) ], check=True) ]
         gens = E.saturation(gens)[0]
@@ -135,12 +137,7 @@ def burungale_skinner_tian_wan_thm19(E, p, verbosity=0):
 
 def burungale_skinner_tian_wan_thm15(E,p, verbosity=0):
     """
-    Check if the conditions of Theorem 1.5 in
-
-    ZETA ELEMENTS FOR ELLIPTIC CURVES AND APPLICATIONS
-    by
-    ASHAY A. BURUNGALE, CHRISTOPHER SKINNER, YE TIAN AND XIN WAN
-
+    Check if the conditions of Theorem 1.5 in [BSTW]
     is so BDS_p(E) holds.
     """
     rho = E.galois_representation()
@@ -173,9 +170,9 @@ def _new_prove_bsd_cm(E, verbosity=0):
     an = E2.analytic_rank()
     attwo, _ = _new_prove_bsd_2(E2, an, verbosity=verbosity)
     if an == 0:
-        # by the first main Theorem in Rubin's 1991 article The "main conjectures" of Iwasawa theory for imaginary quadratic fields.
+        # by the first main Theorem in Rubin's 1991 [R] article The "main conjectures" of Iwasawa theory for imaginary quadratic fields.
         # only primes diving the order of the units in End
-        res = [2] if attwo else []
+        res = [] if attwo else [2]
         if E2.j_invariant() == 0:
             res.append(3)
         return res
@@ -389,7 +386,7 @@ def new_prove_bsd(E,
         # we know that BSD(E,p) holds if Kato's thm 14.5 holds
         # and the analytic order of sha is not
         # divisible by p
-        # Kato's theorem 14.5 requires p>2, potentially good reduction and
+        # Kato's theorem [K] 14.5 requires p>2, potentially good reduction and
         # surjectivity of the representation on E[p]
         primes_to_test = Set(E2.galois_representation().not_surjective())
         primes_to_test += Set(E2.sha().an().prime_divisors())
