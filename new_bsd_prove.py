@@ -13,6 +13,7 @@ Issues:
 * Find more resources, decide if unpublished preprints are ok.
 * Should we check an=rank for rank 2 and 3 curves?
 * cm an=1 case
+* check what needs caching to avoid recalculation
 
 Preliminary list of references:
 [BSTW] Ashay Burungale, Christopher Skinner, Ye Tian, Xin Wan, Zeta elements for elliptic curves and applications, https://arxiv.org/abs/2409.01350, unpublished
@@ -22,19 +23,24 @@ Preliminary list of references:
 [CGS] Francesc Castella, Giada Grossi, Christopher Skinner, Mazur's main conjecture at Eisenstein primes, https://arxiv.org/abs/2303.04373, Math. Ann. 393 (2025), no. 2, 2451–2506.
 [K] Kazuya Kato,
 [C] Francesc Castella, On the p-part of the Birch-Swinnerton-Dyer formula for multiplicative primes. Camb. J. Math. 6 (2018), no. 1, 1–23. With erratum at https://web.math.ucsb.edu/~castella/Birch-erratum.pdf
-
+[BCS] Ashay Burungale, Francesc Castella, Christopher Skinner, Base change and Iwasawa main conjectures for  GL2 , Int. Math. Res. Not. IMRN 2025, no. 8, Paper No. rnaf082, 15 pp.
 
 [KY]  Timo Keller, Mulun Yin, On the anticyclotomic Iwasawa theory of newforms at Eisenstein primes of semistable reduction, https://arxiv.org/abs/2402.12781, unpublished and I trust it less
-
+[FW] Olivier Fouquet, Xin Wan, The Iwasawa Main Conjecture for universal families of
+modular motives,  https://arxiv.org/pdf/2107.13726, not yet published and
+harder to make explicit, but it would cover additive cases when an=0.
 """
-from sage.all import *
 
+from sage.all import *
 
 # from sage.rings.integer_ring import ZZ
 from sage.rings.rational_field import QQ
+from sympy import PolynomialRing
 
 
-
+# note I only use pari-gp, not mwrank or sage's own slow implementation of the
+# two-descent. The reason is that pari also calculates the Cassels-Tate
+# pairing that is helpful (and did not seem to have been used before).
 def _new_prove_bsd_2(E, an, verbosity=0):
     """
     Check BSD(E,2) using the two-descent.
@@ -97,16 +103,11 @@ def _new_prove_bsd_2(E, an, verbosity=0):
         return False, gens
 
 
-
+# currently (July 2026) still unpublished
 def burungale_skinner_tian_wan_thm19(E, p, verbosity=0):
     """
-    Check if the conditions of Theorem 1.9 in
-
-    ZETA ELEMENTS FOR ELLIPTIC CURVES AND APPLICATIONS
-    by
-    ASHAY A. BURUNGALE, CHRISTOPHER SKINNER, YE TIAN AND XIN WAN
-
-    is so BDS_p(E) holds.
+    Check if the conditions of Theorem 1.9 in [BSTW]
+    If so BDS(E,p) holds.
     """
     rho = E.galois_representation()
     if p == 2:
@@ -135,6 +136,7 @@ def burungale_skinner_tian_wan_thm19(E, p, verbosity=0):
                 return False
 
 
+# currently (July 2026) still unpublished
 def burungale_skinner_tian_wan_thm15(E,p, verbosity=0):
     """
     Check if the conditions of Theorem 1.5 in [BSTW]
@@ -157,6 +159,118 @@ def burungale_skinner_tian_wan_thm15(E,p, verbosity=0):
                 return True
             else:
                 return False
+
+
+def has_padic_ptorsion_point(E, p):
+    """
+    Return True if E(Q_p) contains a p-torsion point.
+    Implemented for p>2.
+    """
+    p = ZZ(p)
+    from sage.rings.polynomial.polynomial_ring import PolynomialRing_dense_padic_field_capped_relative as PRing
+    R = Qp(p,30)
+    RX = PRing(R, "X")
+    if p == 2:
+        # this is harder as it could have torsion in the formal group
+        raise NotImplementedError("Not implemented for p=2.")
+    elif p == 3:
+        f = RX(E.division_polynomial(3))
+        ro = f.roots()
+        if len(ro)==0:
+            return False
+        else:
+            Ep = E.change_ring(R)
+            return any(Ep.is_x_coord(xx[0]) for xx in ro)
+    elif E.has_split_multiplicative_reduction(p):
+        # has p-torsion iff q is a p-th power
+        q = E.tate_curve(p).parameter()
+        if q.valuation() % p != 0:
+            return False
+        else:
+            u = q/p**(q.valuation()/p) # a unit
+            f = RX.gens()[0] ** p - u
+            return len(f.roots())>1
+    elif (not E.has_additive_reduction(p)) and E.Np(p)%p != 0:
+        # now the group of components has order coprime to p
+        # the reduction has no p-torsion -> no p-torsion over Qp
+        # non-split mult drops here
+        return False
+    else:
+        Ep = E.change_ring(R)
+        if E.has_good_reduction(p):
+            Ptilda = next(P for P in E.reduction(p) if P.order()==p)
+            xx = R(ZZ(Ptilda[0]))
+            P = Ep.lift_x(xx)
+            Q = p*P
+        else:
+            # must have additive reduction
+            # any non-singular point has order p
+            for xx in srange(p):
+                if Ep.is_x_coord(R(xx)):
+                    P = Ep.lift_x(R(xx))
+                    Q = p*P
+                    if Q[0].valuation() < 0:
+                        break
+        if Q[0].valuation() < -2:
+            return True
+        else:
+            return False
+        # Explanation: We use the exact sequence
+        # 0->E(Qp)[p] -> G[p] -> Ehat(pZp)/p
+        # where G is the quotient of E(Qp) by the
+        # kernel of reduction Ehat(pZp)
+        # above we test if a non-trivial element of G
+        # maps to zero.
+
+
+def castella_grossi_lee_skinner_thmf(E, p, verbosit=0):
+    """
+    Check if the conditions of Theorem F in [CGLS] hold
+    if so BDS_p(E) holds.
+    """
+    if p == 2:
+        return False
+    elif E.galois_representation().is_irreducible(p):
+        return False
+    elif E.torsion_order()%p == 0:
+        return False
+    elif E.analytic_order() > 2:
+        return False
+    else:
+        # check if phi|G_Qp is 1 or omega:
+        if has_padic_ptorsion_point(E,p):
+            return False
+        phis = E.isogenies_prime_degree(p)
+        assert( len(phis)>0 )
+        Cs = [phi.codomain() for phi in phis]
+        if any(has_padic_ptorsion_point(C,p) for C in Cs):
+            return False
+        for phi in phis:
+            c = phi.scaling_factor()
+            # ramified if c=p unramified if c=1
+            ro = phi.kernel_polynomial().change_ring(RR).roots()
+            xx = ro[0][0]
+            boo = E.change_ring(RR).is_x_coord(xx)
+            # ker phi is even iff boo (the kernel has real points)
+            if (c==1 and boo) or (c==p and not boo):
+                return True
+        return False
+
+
+# unpublished preprint, strictly stronger than castella_grossi_lee_skinner_thmf
+def keller_yin_thmc(E, p, verbosit=0):
+    """
+    Check if the conditions of Theorem C in [KY] hold
+    if so BDS_p(E) holds.
+    """
+    if p == 2:
+        return False
+    elif E.galois_representation().is_irreducible(p):
+        return False
+    elif E.analytic_rank() > 1:
+        return False
+    else:
+        return True
 
 
 def _new_prove_bsd_cm(E, verbosity=0):
@@ -184,6 +298,10 @@ def _new_prove_bsd_cm(E, verbosity=0):
         raise RuntimeError("Called _new_prove_bsd_cm with a curve of analytic rank > 1. This is a bug.")
 
 
+# -----------------
+# the main function
+#------------------
+
 def new_prove_bsd(E,
                   verbosity=0):
     r"""
@@ -205,162 +323,6 @@ def new_prove_bsd(E,
       - 1: print sketch of proof
       - 2: print information about remaining primes
 
-     EXAMPLES::
-
-        sage: EllipticCurve('11a').prove_BSD(verbosity=2)
-        p = 2: True by 2-descent
-        True for p not in {2, 5} by Kolyvagin.
-        Kolyvagin's bound for p = 5 applies by Lawson-Wuthrich
-        True for p = 5 by Kolyvagin bound
-        []
-
-        sage: EllipticCurve('14a').prove_BSD(verbosity=2)
-        p = 2: True by 2-descent
-        True for p not in {2, 3} by Kolyvagin.
-        Kolyvagin's bound for p = 3 applies by Lawson-Wuthrich
-        True for p = 3 by Kolyvagin bound
-        []
-
-        sage: E = EllipticCurve("20a1")
-        sage: E.prove_BSD(verbosity=2)
-        p = 2: True by 2-descent
-        True for p not in {2, 3} by Kolyvagin.
-        Kato further implies that #Sha[3] is trivial.
-        []
-
-        sage: E = EllipticCurve("50b1")
-        sage: E.prove_BSD(verbosity=2)
-        p = 2: True by 2-descent
-        True for p not in {2, 3, 5} by Kolyvagin.
-        Kolyvagin's bound for p = 3 applies by Lawson-Wuthrich
-        Kolyvagin's bound for p = 5 applies by Lawson-Wuthrich
-        True for p = 3 by Kolyvagin bound
-        True for p = 5 by Kolyvagin bound
-        []
-        sage: E.prove_BSD(two_desc='pari')
-        []
-
-    A rank two curve::
-
-        sage: E = EllipticCurve('389a')
-
-    We know nothing with proof=True::
-
-        sage: E.prove_BSD()
-        Set of all prime numbers: 2, 3, 5, 7, ...
-
-    We (think we) know everything with proof=False::
-
-        sage: E.prove_BSD(proof=False)
-        []
-
-    A curve of rank 0 and prime conductor::
-
-        sage: E = EllipticCurve('19a')
-        sage: E.prove_BSD(verbosity=2)
-        p = 2: True by 2-descent
-        True for p not in {2, 3} by Kolyvagin.
-        Kolyvagin's bound for p = 3 applies by Lawson-Wuthrich
-        True for p = 3 by Kolyvagin bound
-        []
-
-        sage: E = EllipticCurve('37a')
-        sage: E.rank()
-        1
-        sage: E._EllipticCurve_rational_field__rank
-        (1, True)
-        sage: E.analytic_rank = lambda : 0
-        sage: E.prove_BSD()
-        Traceback (most recent call last):
-        ...
-        RuntimeError: It seems that the rank conjecture does not hold for this curve
-        (Elliptic Curve defined by y^2 + y = x^3 - x over Rational Field)!
-        This may be a counterexample to BSD, but is more likely a bug.
-
-    We test the consistency check for the 2-part of Sha::
-
-        sage: E = EllipticCurve('37a')
-        sage: S = E.sha(); S
-        Tate-Shafarevich group for the Elliptic Curve defined by y^2 + y = x^3 - x
-         over Rational Field
-        sage: def foo(use_database):
-        ....:  return 4
-        sage: S.an = foo
-        sage: E.prove_BSD()
-        Traceback (most recent call last):
-        ...
-        RuntimeError: Apparent contradiction: 0 <= rank(sha[2]) <= 0, but ord_2(sha_an) = 2
-
-    An example with a Tamagawa number at 5::
-
-        sage: E = EllipticCurve('123a1')
-        sage: E.prove_BSD(verbosity=2)
-        p = 2: True by 2-descent
-        True for p not in {2, 5} by Kolyvagin.
-        Kolyvagin's bound for p = 5 applies by Lawson-Wuthrich
-        True for p = 5 by Kolyvagin bound
-        []
-
-    A curve for which 3 divides the order of the Tate-Shafarevich group::
-
-        sage: E = EllipticCurve('681b')
-        sage: E.prove_BSD(verbosity=2)               # long time
-        p = 2: True by 2-descent...
-        True for p not in {2, 3} by Kolyvagin....
-        Remaining primes:
-        p = 3: irreducible, surjective, non-split multiplicative
-            (0 <= ord_p <= 2)
-            ord_p(#Sha_an) = 2
-        [3]
-
-    A curve for which we need to use ``heegner_index_bound``::
-
-        sage: E = EllipticCurve('198b')
-        sage: E.prove_BSD(verbosity=1, secs_hi=1)
-        p = 2: True by 2-descent
-        True for p not in {2, 3} by Kolyvagin.
-        [3]
-
-    The ``return_BSD`` option gives an object with detailed information
-    about the proof::
-
-        sage: E = EllipticCurve('26b')
-        sage: B = E.prove_BSD(return_BSD=True)
-        sage: B.two_tor_rk
-        0
-        sage: B.N
-        26
-        sage: B.gens
-        []
-        sage: B.primes
-        []
-        sage: B.heegner_indexes
-        {-23: 2}
-
-    TESTS:
-
-    This was fixed by :issue:`8184` and :issue:`7575`::
-
-        sage: EllipticCurve('438e1').prove_BSD(verbosity=1)
-        p = 2: True by 2-descent...
-        True for p not in {2} by Kolyvagin.
-        []
-
-    ::
-
-        sage: E = EllipticCurve('960d1')
-        sage: E.prove_BSD(verbosity=1)  # long time (4s on sage.math, 2011)
-        p = 2: True by 2-descent
-        True for p not in {2} by Kolyvagin.
-        []
-
-    ::
-
-        sage: E = EllipticCurve('66b3')
-        sage: E.prove_BSD(two_desc="pari",verbosity=1)
-        p = 2: True by 2-descent
-        True for p not in {2} by Kolyvagin.
-        []
     """
     # no hope to prove anything if analytic rank is >1
     an = E.analytic_rank()
@@ -409,4 +371,6 @@ if __name__ == "__main__":
         print(f"Curve: {E.label()} \n old prove_BSD :: {E.prove_BSD()} \n")
         if E.analytic_rank() < 2:
               print(f"{_new_prove_bsd_2(E, E.analytic_rank(), verbosity=2)}\n")
+        print(has_padic_ptorsion_point(E,3), has_padic_ptorsion_point(E,5), has_padic_ptorsion_point(E, 43))
+
     print("Done.")
