@@ -24,6 +24,7 @@ Mathématique de France, Paris, 2004.
 [C] Francesc Castella, On the p-part of the Birch-Swinnerton-Dyer formula for multiplicative primes. Camb. J. Math. 6 (2018), no. 1, 1–23. With erratum at https://web.math.ucsb.edu/~castella/Birch-erratum.pdf
 [BCS] Ashay Burungale, Francesc Castella, Christopher Skinner, Base change and Iwasawa main conjectures for  GL2 , Int. Math. Res. Not. IMRN 2025, no. 8, Paper No. rnaf082, 15 pp.
 [J] Dimitar P. Jetchev, Global Divisibility of Heegner Points and Tamagawa Numbers, Compos. Math. 144 (2008), no. 4, 811–826. https://arxiv.org/abs/math/0703431
+[SW] William Stein, Christian Wuthrich, Algorithms for the Arithmetic of Elliptic Curves using Iwasawa Theory, Mathematics of Computation 82 (2013), 1757-1792.
 
 [CGLS] Francesc Castella, Giada Grossi, Jaehoon Lee, Christopher Skinner, On the anticyclotomic Iwasawa theory of rational elliptic curves at Eisenstein primes, https://arxiv.org/abs/2008.02571, Invent. Math. 227 (2022), no. 2, 517–580.
 [KY]  Timo Keller, Mulun Yin, On the anticyclotomic Iwasawa theory of newforms at Eisenstein primes of semistable reduction, https://arxiv.org/abs/2402.12781, unpublished and I trust it less
