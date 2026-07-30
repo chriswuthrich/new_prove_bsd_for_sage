@@ -1,41 +1,84 @@
 r"""
 This is a new attempt to implement prove_BSD function for elliptic curves
 defined over Q.
-The name is also debatable, since it returns a list of primes where
-it cannot prove it.
+The new structure of the function does the following:
+If the analytic rank is >1, we can't do anything.
+Then use pari's 2-decsent to try to check BSD(E,2).
+Reduce it to a finite list of primes to check by
+either using Kato in rank 0 or Kolyvagin (in the
+formulation by Jetchev) when the rank is 1.
+Then we have plenty of functions gathered implementing
+specific theorems found in papers.
+We run through them until we hit one that proves it,
+otherwise we add it to the output.
+
+Compared to the old version, we never calculate a
+Heegner index.
+However in most cases, the list in the new version are
+longer than in the current sage version.
 
 Here the sage issue : https://github.com/sagemath/sage/pull/42397
 and the one for the lmfdb: https://github.com/LMFDB/lmfdb/issues/7045
 
-Issues:
+Issues still to consider:
+* Add examples, documentation and test it.
 * We have to check if all is proven. sha.an needs the Manin constant to be 1 or 2.
 * Should check if L>0 for full BSD.
 * Find more resources, decide if unpublished preprints are ok.
 * Should we check an=rank for rank 2 and 3 curves?
-* check what needs caching to avoid recalculation
+* check what needs caching to avoid recalculation.
+* should we change the name of the function?
 
 Preliminary list of references:
-[BSTW] Ashay Burungale, Christopher Skinner, Ye Tian, Xin Wan, Zeta elements for elliptic curves and applications, https://arxiv.org/abs/2409.01350, unpublished
-[BT] Ashay A. Burungale, Ye Tian, A rank zero p-converse to a theorem of Gross--Zagier, Kolyvagin and Rubin, https://arxiv.org/abs/2506.03465, Annals of Maths
-[R] Karl Rubin,The 'main conjectures' of Iwasawa theory for imaginary quadratic fields., https://eudml.org/doc/143852, Inventiones mathematicae (1991) Volume: 103, Issue: 1, page 25-68
-[CGS] Francesc Castella, Giada Grossi, Christopher Skinner, Mazur's main conjecture at Eisenstein primes, https://arxiv.org/abs/2303.04373, Math. Ann. 393 (2025), no. 2, 2451–2506.
-[K] Kazuya Kato, p-adic Hodge theory and values of zeta functions of modular forms, Cohomologies p-adiques et application arithmétiques. III, Astérisque, vol. 295, Société
-Mathématique de France, Paris, 2004.
-[C] Francesc Castella, On the p-part of the Birch-Swinnerton-Dyer formula for multiplicative primes. Camb. J. Math. 6 (2018), no. 1, 1–23. With erratum at https://web.math.ucsb.edu/~castella/Birch-erratum.pdf
-[BCS] Ashay Burungale, Francesc Castella, Christopher Skinner, Base change and Iwasawa main conjectures for  GL2 , Int. Math. Res. Not. IMRN 2025, no. 8, Paper No. rnaf082, 15 pp.
-[J] Dimitar P. Jetchev, Global Divisibility of Heegner Points and Tamagawa Numbers, Compos. Math. 144 (2008), no. 4, 811–826. https://arxiv.org/abs/math/0703431
-[SW] William Stein, Christian Wuthrich, Algorithms for the Arithmetic of Elliptic Curves using Iwasawa Theory, Mathematics of Computation 82 (2013), 1757-1792.
+[CGLS] Francesc Castella, Giada Grossi, Jaehoon Lee, Christopher Skinner,
+    On the anticyclotomic Iwasawa theory of rational elliptic curves at Eisenstein primes,
+    https://arxiv.org/abs/2008.02571,
+    Invent. Math. 227 (2022), no. 2, 517–580.
+[BT] Ashay A. Burungale, Ye Tian,
+    A rank zero p-converse to a theorem of Gross--Zagier, Kolyvagin and Rubin,
+    https://arxiv.org/abs/2506.03465, Annals of Maths
+[R] Karl Rubin,
+    The 'main conjectures' of Iwasawa theory for imaginary quadratic fields,
+    https://eudml.org/doc/143852,
+    Inventiones mathematicae (1991) Volume: 103, Issue: 1, page 25-68
+[CGS] Francesc Castella, Giada Grossi, Christopher Skinner,
+    Mazur's main conjecture at Eisenstein primes,
+    https://arxiv.org/abs/2303.04373,
+    Math. Ann. 393 (2025), no. 2, 2451–2506.
+[K] Kazuya Kato,
+    p-adic Hodge theory and values of zeta functions of modular forms,
+    Cohomologies p-adiques et application arithmétiques. III, Astérisque, vol. 295,
+    Société Mathématique de France, Paris, 2004.
+[C] Francesc Castella,
+    On the p-part of the Birch-Swinnerton-Dyer formula for multiplicative primes.
+    Camb. J. Math. 6 (2018), no. 1, 1–23.
+    With erratum at https://web.math.ucsb.edu/~castella/Birch-erratum.pdf
+[BCS] Ashay Burungale, Francesc Castella, Christopher Skinner,
+    Base change and Iwasawa main conjectures for  GL2,
+    Int. Math. Res. Not. IMRN 2025, no. 8, 15 pp.
+[J] Dimitar P. Jetchev,
+    Global Divisibility of Heegner Points and Tamagawa Numbers,
+    Compos. Math. 144 (2008), no. 4, 811–826.
+    https://arxiv.org/abs/math/0703431
+[SW] William Stein, Christian Wuthrich,
+    Algorithms for the Arithmetic of Elliptic Curves using Iwasawa Theory,
+    Mathematics of Computation 82 (2013), 1757-1792.
 
-[CGLS] Francesc Castella, Giada Grossi, Jaehoon Lee, Christopher Skinner, On the anticyclotomic Iwasawa theory of rational elliptic curves at Eisenstein primes, https://arxiv.org/abs/2008.02571, Invent. Math. 227 (2022), no. 2, 517–580.
-[KY]  Timo Keller, Mulun Yin, On the anticyclotomic Iwasawa theory of newforms at Eisenstein primes of semistable reduction, https://arxiv.org/abs/2402.12781, unpublished and I trust it less
-[FW] Olivier Fouquet, Xin Wan, The Iwasawa Main Conjecture for universal families of
-modular motives,  https://arxiv.org/pdf/2107.13726, not yet published and
-harder to make explicit, but it would cover additive cases when an=0.
+[BSTW] Ashay Burungale, Christopher Skinner, Ye Tian, Xin Wan,
+    Zeta elements for elliptic curves and applications,
+    https://arxiv.org/abs/2409.01350, unpublished
+[KY] Timo Keller, Mulun Yin,
+    On the anticyclotomic Iwasawa theory of newforms at Eisenstein primes of semistable reduction,
+    https://arxiv.org/abs/2402.12781, unpublished
+[FW] Olivier Fouquet, Xin Wan,
+    The Iwasawa Main Conjecture for universal families of modular motives,
+    https://arxiv.org/pdf/2107.13726, not yet published and not yet used
+    harder to make explicit, but it would cover additive cases when an=0.
 """
 
 from sage.all import *
 
-# from sage.rings.integer_ring import ZZ
+from sage.rings.integer_ring import ZZ
 from sage.rings.rational_field import QQ
 
 
@@ -82,8 +125,8 @@ def _new_prove_bsd_2(E, an, verbosity=0):
     # this is the dimension of Sha[2]
     sel2 = rank_upper_bd + s - rank
     if sel2 == s:
-        # this implies that 2Sha[4]=0 and hence Sha[4] = Sha[2] is all of the 2-primary
-        # part of Sha
+        # this implies that 2Sha[4]=0 and
+        # hence Sha[4] = Sha[2] is all of the 2-primary part of Sha
         if sel2 == E.sha().an().ord(2):
             if verbosity>0:
                 print(f"BSD(E,2) holds thanks to a 2-descent calculation.")
@@ -102,6 +145,7 @@ def _new_prove_bsd_2(E, an, verbosity=0):
                   f"The 2-primary part of Sha contains at least {2**(2*sel2-s)} elements "
                   f"and the analytic order of Sha is {E.sha().an()}.")
         return False, gens
+
 
 def stein_wuthrich_thm81(E, p, verbosity=0):
     """
@@ -231,7 +275,7 @@ def burungale_skinner_tian_wan_thm15(E,p, verbosity=0):
                 return False
 
 # multiplicative case
-def castella_thmAprime(E, p, verbosity=0):
+def castella_thmaprime(E, p, verbosity=0):
     """
     Check if the conditions of Theorem A' in the erratum to [C]
     are verified.
@@ -456,6 +500,159 @@ def new_prove_bsd(E,
       - 1: print sketch of proof
       - 2: print information about remaining primes
 
+    EXAMPLES::
+
+        sage: new_prove_bsd(EllipticCurve(11a1, verbosity=2)
+        The two-descent gives the following information: 0 <= rank <= 0,dim Sha[2]/2Sha[4] = 0 and the following points were found: [].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Kato's Theorem 14.5 in [K] proves it for all odd primes except {11, 5}.
+        Primes left to test: {11, 5}
+        Theorem 8.1 in [SW] proves BSD(E,11).
+        Theorem C in [KY] proves BSD(E,5).
+        []
+
+
+        sage: new_prove_bsd(EllipticCurve(14a1, verbosity=2)
+        The two-descent gives the following information: 0 <= rank <= 0,dim Sha[2]/2Sha[4] = 0 and the following points were found: [].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 7}.
+        Primes left to test: {3, 7}
+        Theorem C in [KY] proves BSD(E,3).
+        Theorem 8.1 in [SW] proves BSD(E,7).
+        []
+
+
+        sage: new_prove_bsd(EllipticCurve(20a1, verbosity=2)
+        The two-descent gives the following information: 0 <= rank <= 0,dim Sha[2]/2Sha[4] = 0 and the following points were found: [].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 5}.
+        Primes left to test: {3, 5}
+        Theorem C in [KY] proves BSD(E,3).
+        Theorem 8.1 in [SW] proves BSD(E,5).
+        []
+
+
+        sage: new_prove_bsd(EllipticCurve(50b1, verbosity=2)
+        The two-descent gives the following information: 0 <= rank <= 0,dim Sha[2]/2Sha[4] = 0 and the following points were found: [].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 5}.
+        Primes left to test: {3, 5}
+        Theorem F in [CGLS] proves BSD(E,3).
+        Theorem C in [KY] proves BSD(E,5).
+        []
+
+
+        sage: new_prove_bsd(EllipticCurve(389a1, verbosity=2)
+        Cannot verify BSD(E,p) for any prime p as the analytic rank is > 1.
+        Set of all prime numbers: 2, 3, 5, 7, ...
+
+
+        sage: new_prove_bsd(EllipticCurve(19a1, verbosity=2)
+        The two-descent gives the following information: 0 <= rank <= 0,dim Sha[2]/2Sha[4] = 0 and the following points were found: [].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 19}.
+        Primes left to test: {3, 19}
+        Theorem C in [KY] proves BSD(E,3).
+        Theorem 8.1 in [SW] proves BSD(E,19).
+        []
+
+
+        sage: new_prove_bsd(EllipticCurve(37a1, verbosity=2)
+        The two-descent gives the following information: 1 <= rank <= 1,dim Sha[2]/2Sha[4] = 0 and the following points were found: [[-1, 0]].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Corollary 1.5 in [J] proves it for all odd primes except {37}.
+        Primes left to test: {37}
+        BSD(E,p) is not known to hold for the primes [37].
+         E has analytic and algebraic rank 1.
+         The Tamagawa numbers are c_37 = 1.
+         The torsion order is 1.
+         * At p=37, the curve has non-split multiplicative reduction.
+           The Galois representation on E[37] is surjective.
+        [37]
+
+
+        sage: new_prove_bsd(EllipticCurve(123a1, verbosity=2)
+        The two-descent gives the following information: 1 <= rank <= 1,dim Sha[2]/2Sha[4] = 0 and the following points were found: [[-4, 1]].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Corollary 1.5 in [J] proves it for all odd primes except {41, 3, 5}.
+        Primes left to test: {41, 3, 5}
+        Theorem D in [CGS] proves BSD(E,5).
+        BSD(E,p) is not known to hold for the primes [41, 3].
+         E has analytic and algebraic rank 1.
+         The Tamagawa numbers are c_3 = 5, c_41 = 1.
+         The torsion order is 5.
+         * At p=41, the curve has split multiplicative reduction.
+           The Galois representation on E[41] is surjective.
+         * At p=3, the curve has split multiplicative reduction.
+           The Galois representation on E[3] is surjective.
+        [41, 3]
+
+
+        sage: new_prove_bsd(EllipticCurve(681b1, verbosity=2)
+        The two-descent gives the following information: 0 <= rank <= 0,dim Sha[2]/2Sha[4] = 0 and the following points were found: [].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 227}.
+        Primes left to test: {3, 227}
+        Theorem 8.1 in [SW] proves BSD(E,227).
+        BSD(E,p) is not known to hold for the primes [3].
+         E has analytic and algebraic rank 0.
+         The Tamagawa numbers are c_3 = 2, c_227 = 2.
+         The torsion order is 4.
+         * At p=3, the curve has non-split multiplicative reduction.
+           The Galois representation on E[3] is surjective.
+        [3]
+
+
+        sage: new_prove_bsd(EllipticCurve(198b1, verbosity=2)
+        The two-descent gives the following information: 0 <= rank <= 0,dim Sha[2]/2Sha[4] = 0 and the following points were found: [].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 11}.
+        Primes left to test: {3, 11}
+        Theorem C in [KY] proves BSD(E,3).
+        Theorem 8.1 in [SW] proves BSD(E,11).
+        []
+
+
+        sage: new_prove_bsd(EllipticCurve(26b1, verbosity=2)
+        The two-descent gives the following information: 0 <= rank <= 0,dim Sha[2]/2Sha[4] = 0 and the following points were found: [].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Kato's Theorem 14.5 in [K] proves it for all odd primes except {13, 7}.
+        Primes left to test: {13, 7}
+        Theorem 8.1 in [SW] proves BSD(E,13).
+        Theorem D in [CGS] proves BSD(E,7).
+        []
+
+
+        sage: new_prove_bsd(EllipticCurve(438e1, verbosity=2)
+        The two-descent gives the following information: 0 <= rank <= 0,dim Sha[2]/2Sha[4] = 0 and the following points were found: [].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Kato's Theorem 14.5 in [K] proves it for all odd primes except {73, 3}.
+        Primes left to test: {73, 3}
+        Theorem 8.1 in [SW] proves BSD(E,73).
+        Theorem 8.1 in [SW] proves BSD(E,3).
+        []
+
+
+        sage: new_prove_bsd(EllipticCurve(960d1, verbosity=2)
+        The two-descent gives the following information: 0 <= rank <= 0,dim Sha[2]/2Sha[4] = 0 and the following points were found: [].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 5}.
+        Primes left to test: {3, 5}
+        Theorem 8.1 in [SW] proves BSD(E,3).
+        Theorem 8.1 in [SW] proves BSD(E,5).
+        []
+
+
+        sage: new_prove_bsd(EllipticCurve(66b3, verbosity=2)
+        The two-descent gives the following information: 0 <= rank <= 0,dim Sha[2]/2Sha[4] = 0 and the following points were found: [].
+        BSD(E,2) holds thanks to a 2-descent calculation.
+        Kato's Theorem 14.5 in [K] proves it for all odd primes except {11, 3}.
+        Primes left to test: {11, 3}
+        Theorem 8.1 in [SW] proves BSD(E,11).
+        Theorem 8.1 in [SW] proves BSD(E,3).
+        []
+
+
     """
     # no hope to prove anything if analytic rank is >1
     an = E.analytic_rank()
@@ -490,7 +687,7 @@ def new_prove_bsd(E,
         if verbosity > 0:
             print(f"Kato's Theorem 14.5 in [K] proves it for all odd primes except {primes_to_test}.")
     else: # an == 1
-        # Using Cor 1.5 in [J], strengthing Kolyvagin's theorem, BSD(E,p)
+        # Using Cor 1.5 in [J], strengthening Kolyvagin's theorem, BSD(E,p)
         # holds if p is good, rho is surjective, p does not divide the
         # analytic order of Sha, and p divides at most one Tamagawa numbers
         primes_to_test = Set(E2.galois_representation().non_surjective())
@@ -514,7 +711,7 @@ def new_prove_bsd(E,
             stein_wuthrich_thm81,
             stein_wuthrich_thm91,
             castella_grossi_lee_skinner_thmf,
-            castella_thmAprime,
+            castella_thmaprime,
             castella_grossi_skinner_thmd,
             burungale_skinner_tian_wan_thm19,  # unpublished
             burungale_skinner_tian_wan_thm15,  # unpublished
@@ -523,7 +720,7 @@ def new_prove_bsd(E,
             res.append(p)
 
     # give extra information if verbosity is 2
-    if verbosity > 1 and len(res)>0 and an<=1:
+    if verbosity>1 and len(res)>0 and an<=1:
         print(f"BSD(E,p) is not known to hold for the primes {res}.")
         print(f" E has analytic and algebraic rank {an}.")
         if E.has_cm():
@@ -533,7 +730,7 @@ def new_prove_bsd(E,
         tam = ""
         for ell in E.conductor().prime_divisors():
             tam += f"c_{ell} = {E.tamagawa_number(ell)}, "
-        tam = tam[:-2] # delete trailing ",2
+        tam = tam[:-2] # delete trailing ","
         print(f" The Tamagawa numbers are {tam}.")
         print(f" The torsion order is {E.torsion_order()}.")
         for p in res:
@@ -564,14 +761,42 @@ def new_prove_bsd(E,
 
 
 if __name__ == "__main__":
+
+    # produce doc string
     for la in ['11a', '14a', '20a1', '50b1', '389a',
                '19a', '37a', '123a1', '681b', '198b',
                '26b', '438e1', '960d1', '66b3']:
         E = EllipticCurve(la)
-        print(f"Curve: {E.label()} \nold prove_BSD :: {E.prove_BSD()}")
-        if E.analytic_rank() <= 1:
-            print(f"{new_prove_bsd(E, 2)}")
-        elif E.analytic_rank() == 1:
-            print(f"{_new_prove_bsd_2(E, E.analytic_rank(), verbosity=2)}\n")
-        print("\n")
-    print("Done.")
+        print(f"sage: new_prove_bsd(EllipticCurve({E.label()}, verbosity=2)")
+        print(f"{new_prove_bsd(E, 2)}\n\n")
+
+    # compare
+    for E in cremona_optimal_curves(srange(100)):
+        res_new = new_prove_bsd(E)
+        res_old = E.prove_BSD()
+        if res_new != res_old:
+            print(f"{E.label()} :: {res_new}, {res_old}")
+
+    # This currently gives
+    #
+    # 27a1 :: [3], []
+    # 37a1 :: [37], []
+    # 43a1 :: [43], []
+    # 45a1 :: [3], []
+    # 53a1 :: [53], []
+    # 61a1 :: [61], []
+    # 63a1 :: [3], []
+    # 72a1 :: [3], []
+    # 75b1 :: [5], []
+    # 79a1 :: [79], []
+    # 83a1 :: [83], []
+    # 88a1 :: [11], []
+    # 89a1 :: [89], []
+    # 90a1 :: [], [3]
+    # 90b1 :: [], [3]
+    # 90c1 :: [], [3]
+    # 91b1 :: [13, 7], [3]
+    # 92b1 :: [23], []
+    # 98a1 :: [7], []
+    # 99a1 :: [11, 3], []
+    # 99b1 :: [3], []
