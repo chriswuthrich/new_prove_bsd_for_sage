@@ -12,19 +12,20 @@ Issues:
 * Should check if L>0 for full BSD.
 * Find more resources, decide if unpublished preprints are ok.
 * Should we check an=rank for rank 2 and 3 curves?
-* cm an=1 case
 * check what needs caching to avoid recalculation
 
 Preliminary list of references:
 [BSTW] Ashay Burungale, Christopher Skinner, Ye Tian, Xin Wan, Zeta elements for elliptic curves and applications, https://arxiv.org/abs/2409.01350, unpublished
 [BT] Ashay A. Burungale, Ye Tian, A rank zero p-converse to a theorem of Gross--Zagier, Kolyvagin and Rubin, https://arxiv.org/abs/2506.03465, Annals of Maths
 [R] Karl Rubin,The 'main conjectures' of Iwasawa theory for imaginary quadratic fields., https://eudml.org/doc/143852, Inventiones mathematicae (1991) Volume: 103, Issue: 1, page 25-68
-[CGLS] Francesc Castella, Giada Grossi, Jaehoon Lee, Christopher Skinner, On the anticyclotomic Iwasawa theory of rational elliptic curves at Eisenstein primes, https://arxiv.org/abs/2008.02571, Invent. Math. 227 (2022), no. 2, 517–580.
 [CGS] Francesc Castella, Giada Grossi, Christopher Skinner, Mazur's main conjecture at Eisenstein primes, https://arxiv.org/abs/2303.04373, Math. Ann. 393 (2025), no. 2, 2451–2506.
-[K] Kazuya Kato,
+[K] Kazuya Kato, p-adic Hodge theory and values of zeta functions of modular forms, Cohomologies p-adiques et application arithmétiques. III, Astérisque, vol. 295, Société
+Mathématique de France, Paris, 2004.
 [C] Francesc Castella, On the p-part of the Birch-Swinnerton-Dyer formula for multiplicative primes. Camb. J. Math. 6 (2018), no. 1, 1–23. With erratum at https://web.math.ucsb.edu/~castella/Birch-erratum.pdf
 [BCS] Ashay Burungale, Francesc Castella, Christopher Skinner, Base change and Iwasawa main conjectures for  GL2 , Int. Math. Res. Not. IMRN 2025, no. 8, Paper No. rnaf082, 15 pp.
+[J] Dimitar P. Jetchev, Global Divisibility of Heegner Points and Tamagawa Numbers, Compos. Math. 144 (2008), no. 4, 811–826. https://arxiv.org/abs/math/0703431
 
+[CGLS] Francesc Castella, Giada Grossi, Jaehoon Lee, Christopher Skinner, On the anticyclotomic Iwasawa theory of rational elliptic curves at Eisenstein primes, https://arxiv.org/abs/2008.02571, Invent. Math. 227 (2022), no. 2, 517–580.
 [KY]  Timo Keller, Mulun Yin, On the anticyclotomic Iwasawa theory of newforms at Eisenstein primes of semistable reduction, https://arxiv.org/abs/2402.12781, unpublished and I trust it less
 [FW] Olivier Fouquet, Xin Wan, The Iwasawa Main Conjecture for universal families of
 modular motives,  https://arxiv.org/pdf/2107.13726, not yet published and
@@ -101,6 +102,75 @@ def _new_prove_bsd_2(E, an, verbosity=0):
                   f"and the analytic order of Sha is {E.sha().an()}.")
         return False, gens
 
+def stein_wuthrich_thm81(E, p, verbosity=0):
+    """
+    Check the conditions of Theorem 8.1 in [SW].
+    This only uses one divisibility in the main conjecture
+    so this proves bsd p only if the analytic order of sha is trivial.
+    """
+    if p==2:
+        return False
+    elif E.analytic_rank() > 0:
+        return False
+    elif not E.galois_representation().is_surjective(p):
+        return False
+    elif E.conductor()%(p**2) == 0:
+        return False
+    elif E.sha().an()%p == 0:
+        return False
+    else:
+        if verbosity>0:
+            print(f"Theorem 8.1 in [SW] proves BSD(E,{p}).")
+        return True
+
+
+def stein_wuthrich_thm91(E, p, verbosity=0):
+    """
+    Check the conditions of Theorem 9.1 in [SW]
+    """
+    if p == 2:
+        return False
+    elif E.analytic_rank() != 1:
+        return False
+    elif E.conductor()%p == 0:
+        return False
+    elif E.ap(p)%p == 0:
+        return False
+    elif not E.galois_representation().is_surjective(p):
+        return False
+    elif E.sha().an() % p == 0:
+        return False
+    else:
+        P = E.gens()[0]
+        hp = E.padic_height(p)
+        if hp(P) == 0:
+            return False
+        else:
+            if verbosity > 0:
+                print(f"Theorem 9.1 in [SW] proves BSD(E,{p}).")
+            return True
+
+
+def burungale_castella_skinner(E, p, verbosity=0):
+    """
+    Check conditions of Corollary 1.3.1 in [BCS].
+    If so BSD(E,p) holds.
+    """
+    if p==2 or p==3:
+        return False
+    elif E.conductor()%p == 0:
+        return False
+    elif E.ap(p)%p == 0:
+        return False
+    elif not E.galois_representation().is_surjective(p):
+        # this also excludes that E has cm
+        return False
+    elif E.analytic_rank() <= 1:
+        return False
+    else:
+        if verbosity>0:
+            print(f"Corollary 1.3.1 in [BCS] proves BSD(E,{p}).")
+
 
 # currently (July 2026) still unpublished
 def burungale_skinner_tian_wan_thm19(E, p, verbosity=0):
@@ -176,12 +246,12 @@ def castella_thmAprime(E, p, verbosity=0):
     elif E.analytic_rank() != 1:
         return False
     else:
-        qs = [q for q in E.conductor().prime_divisors() if E.has_non_split_multiplicative_reduction(q) and q!=p]
+        qs = [q for q in E.conductor().prime_divisors() if E.has_nonsplit_multiplicative_reduction(q) and q!=p]
         if len(qs)==0:
             return False
         boo = any(E.j_invariant().valuation(q)%p!=0 for q in qs) # check if E[p] is ramified at one q
         if boo and verbosity>0:
-            print(f"Theorem A' in [C] proves BSD(E,{p})"
+            print(f"Theorem A' in [C] proves BSD(E,{p}) "
                   f"using the auxiliary primes {[q for q in qs if E.j_invariant().valuation(q)%p!=0]}.")
         return boo
 
@@ -416,8 +486,22 @@ def new_prove_bsd(E,
         primes_to_test += Set(E2.sha().an().prime_divisors())
         primes_to_test += Set(E2.j_invariant().denominator().prime_divisors())
         primes_to_test = primes_to_test.difference(Set([2]))
+        if verbosity > 0:
+            print(f"Kato's Theorem 14.5 in [K] proves it for all odd primes except {primes_to_test}.")
     else: # an == 1
-        raise NotImplementedError("")
+        # Using Cor 1.5 in [J], strengthing Kolyvagin's theorem, BSD(E,p)
+        # holds if p is good, rho is surjective, p does not divide the
+        # analytic order of Sha, and p divides at most one Tamagawa numbers
+        primes_to_test = Set(E2.galois_representation().non_surjective())
+        primes_to_test += Set(E2.sha().an().prime_divisors())
+        primes_to_test += Set(E2.conductor().prime_divisors())
+        tams = E2.tamagawa_numbers()
+        for ell in prod(tams).prime_factors():
+            if sum( cv%ell==0 for cv in tams ) > 1: # more than one Tamagawa number is divisible by ell
+                primes_to_test += Set([ell])
+        primes_to_test = primes_to_test.difference(Set([2]))
+        if verbosity > 0:
+            print(f"Corollary 1.5 in [J] proves it for all odd primes except {primes_to_test}.")
 
     if verbosity > 1:
         print(f"Primes left to test: {primes_to_test}")
@@ -425,14 +509,16 @@ def new_prove_bsd(E,
     for p in primes_to_test:
         # is any of the criteria above apply, go to the next prime
         # otherwise append it to the result in res
-        if not any([
-            burungale_skinner_tian_wan_thm19(E, p, verbosity=verbosity), #unpublished
-            burungale_skinner_tian_wan_thm15(E, p, verbosity=verbosity), #unpublished
-            castella_grossi_lee_skinner_thmf(E, p, verbosity=verbosity),
-            keller_yin_thmc(E, p, verbosity=verbosity), # unpublished
-            castella_thmAprime(E, p , verbosity=verbosity),
-            castella_grossi_skinner_thmd(E, p , verbosity=verbosity)
-        ] ):
+        if not any( f(E2, p, verbosity=verbosity) for f in [
+            stein_wuthrich_thm81,
+            stein_wuthrich_thm91,
+            castella_grossi_lee_skinner_thmf,
+            castella_thmAprime,
+            castella_grossi_skinner_thmd,
+            burungale_skinner_tian_wan_thm19,  # unpublished
+            burungale_skinner_tian_wan_thm15,  # unpublished
+            keller_yin_thmc,  # unpublished
+        ]):
             res.append(p)
 
     # give extra information if verbosity is 2
@@ -441,6 +527,8 @@ def new_prove_bsd(E,
         print(f" E has analytic and algebraic rank {an}.")
         if E.has_cm():
             print(f" E has complex multiplication with discriminant {E.cm_discriminant()}.")
+        if E != E2:
+            print(f" We changed curve to the isogenous curve {E2.label()}.")
         tam = ""
         for ell in E.conductor().prime_divisors():
             tam += f"c_{ell} = {E.tamagawa_number(ell)}, "
@@ -479,8 +567,8 @@ if __name__ == "__main__":
                '19a', '37a', '123a1', '681b', '198b',
                '26b', '438e1', '960d1', '66b3']:
         E = EllipticCurve(la)
-        print(f"Curve: {E.label()} \n old prove_BSD :: {E.prove_BSD()} \n")
-        if E.analytic_rank() == 0:
+        print(f"Curve: {E.label()} \nold prove_BSD :: {E.prove_BSD()}")
+        if E.analytic_rank() <= 1:
             print(f"{new_prove_bsd(E, 2)}")
         elif E.analytic_rank() == 1:
             print(f"{_new_prove_bsd_2(E, E.analytic_rank(), verbosity=2)}\n")
