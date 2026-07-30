@@ -35,7 +35,6 @@ from sage.all import *
 
 # from sage.rings.integer_ring import ZZ
 from sage.rings.rational_field import QQ
-from sympy import PolynomialRing
 
 
 # note I only use pari-gp, not mwrank or sage's own slow implementation of the
@@ -50,7 +49,7 @@ def _new_prove_bsd_2(E, an, verbosity=0):
     Returns a boolean, which is True if BDS(E,2) is proven, and a list of points.
     """
     if an > 1:
-        raise RuntimeError("This function should only be called if the analytic rank is <= 1")
+        raise RuntimeError("This function should only be called if the analytic rank is <= 1.")
     ep = E.pari_curve()
     lower, rank_upper_bd, s, pts = ep.ellrank()
     # this is explained in the pari-gp documentation:
@@ -58,7 +57,7 @@ def _new_prove_bsd_2(E, an, verbosity=0):
     # which is a lower bound for dim Sha[2]
     if verbosity>1:
         print(f"The two-descent gives the following information: {lower} <= rank <= {rank_upper_bd},"
-              f"dim Sha[2]/2Sha[4] = {s} and the following points were found: {pts}")
+              f"dim Sha[2]/2Sha[4] = {s} and the following points were found: {pts}.")
 
     # sanity checks
     if (lower > rank_upper_bd or lower != len(pts) or
@@ -66,7 +65,7 @@ def _new_prove_bsd_2(E, an, verbosity=0):
         raise RuntimeError(f"The two-descent failed for this curve. "
                            f"The lower bound is {lower} and the upper bound is {rank_upper_bd}. "
                            f"The analytic rank is {an} and we found the following "
-                           f"independent points : {pts}")
+                           f"independent points : {pts}.")
 
     # Not sure if we need the point later
     if len(pts) == 1:
@@ -96,7 +95,7 @@ def _new_prove_bsd_2(E, an, verbosity=0):
     else:
         # in this case Sha[4] is non-trivial. We cannot determine
         # the order of Sha[2^oo] and we cannot conclude if BSD(E,2) holds.
-        if verbosity>0:
+        if verbosity>1:
             print(f"We cannot conclude that BSD(E,2) holds using a 2-descent. "
                   f"The 2-primary part of Sha contains at least {2**(2*sel2-s)} elements "
                   f"and the analytic order of Sha is {E.sha().an()}.")
@@ -129,8 +128,8 @@ def burungale_skinner_tian_wan_thm19(E, p, verbosity=0):
         else:
             an = E.analytic_rank()
             if an == 1:
-                if verbosity>1:
-                    print(f"Theorem 1.9 in [BSTW] with ell in {useful_ells} proves BSD(E,{p})")
+                if verbosity>0:
+                    print(f"Theorem 1.9 in [BSTW] with ell in {useful_ells} proves BSD(E,{p}).")
                 return True
             else:
                 return False
@@ -155,7 +154,7 @@ def burungale_skinner_tian_wan_thm15(E,p, verbosity=0):
         else:
             if E.analytic_rank() <= 1:
                 if verbosity>1:
-                    print(f"Theorem 1.5 in [BSTW] proves BSD(E,{p})")
+                    print(f"Theorem 1.5 in [BSTW] proves BSD(E,{p}).")
                 return True
             else:
                 return False
@@ -180,7 +179,11 @@ def castella_thmAprime(E, p, verbosity=0):
         qs = [q for q in E.conductor().prime_divisors() if E.has_non_split_multiplicative_reduction(q) and q!=p]
         if len(qs)==0:
             return False
-        return any(E.j_invariant().valuation(q)%p!=0 for q in qs) # check if E[p] is ramified at one q
+        boo = any(E.j_invariant().valuation(q)%p!=0 for q in qs) # check if E[p] is ramified at one q
+        if boo and verbosity>0:
+            print(f"Theorem A' in [C] proves BSD(E,{p})"
+                  f"using the auxiliary primes {[q for q in qs if E.j_invariant().valuation(q)%p!=0]}.")
+        return boo
 
 
 # ---------------- reducible cases --------------
@@ -277,6 +280,8 @@ def castella_grossi_lee_skinner_thmf(E, p, verbosity=0):
             boo = E.change_ring(RR).is_x_coord(xx)
             # ker phi is even iff boo (the kernel has real points)
             if (c==1 and boo) or (c==p and not boo):
+                if verbosity>0:
+                    print(f"Theorem F in [CGLS] proves BSD(E,{p}).")
                 return True
         return False
 
@@ -302,7 +307,10 @@ def castella_grossi_skinner_thmd(E, p , verbosity=0):
         Cs = [phi.codomain() for phi in phis]
         if any(has_padic_ptorsion_point(C,p) for C in Cs):
             return False
-
+        else:
+            if verbosity>0:
+                print(f"Theorem D in [CGS] proves BSD(E,{p}).")
+            return True
 
 # currently (July 2026) unpublished preprint, strictly stronger than castella_grossi_lee_skinner_thmf
 def keller_yin_thmc(E, p, verbosity=0):
@@ -317,6 +325,8 @@ def keller_yin_thmc(E, p, verbosity=0):
     elif E.analytic_rank() > 1:
         return False
     else:
+        if verbosity>0:
+            print(f"Theorem C in [KY] proves BSD(E,{p}).")
         return True
 
 # ---------------- cm case --------------
@@ -325,7 +335,7 @@ def _new_prove_bsd_cm(E, verbosity=0):
     non_max_j_invs = [ -12288000, 54000, 287496, 16581375 ]
     if E.j_invariant() in non_max_j_invs:
         if verbosity > 0:
-            print('CM by non maximal order: switching curves')
+            print('CM by non maximal order: switching curves.')
         E2 = next(C for C in E.isogeny_class().curves if C.j_invariant() not in non_max_j_invs)
     else:
         E2 = E
@@ -337,6 +347,10 @@ def _new_prove_bsd_cm(E, verbosity=0):
         res = [] if attwo else [2]
         if E2.j_invariant() == 0:
             res.append(3)
+            if verbosity>0:
+                print(f"Rubin's theorem in [R] proves BSD(E,p) for all p>3.")
+        elif verbosity>0:
+            print(f"Rubin's theorem in [R] proves BSD(E,p) for all p>2.")
         return res
     elif an == 1:
         return NotImplementedError("This is not implemented yet.")
@@ -420,6 +434,42 @@ def new_prove_bsd(E,
             castella_grossi_skinner_thmd(E, p , verbosity=verbosity)
         ] ):
             res.append(p)
+
+    # give extra information if verbosity is 2
+    if verbosity > 1 and len(res)>0 and an<=1:
+        print(f"BSD(E,p) is not known to hold for the primes {res}.")
+        print(f" E has analytic and algebraic rank {an}.")
+        if E.has_cm():
+            print(f" E has complex multiplication with discriminant {E.cm_discriminant()}.")
+        tam = ""
+        for ell in E.conductor().prime_divisors():
+            tam += f"c_{ell} = {E.tamagawa_number(ell)}, "
+        tam = tam[:-2] # delete trailing ",2
+        print(f" The Tamagawa numbers are {tam}.")
+        print(f" The torsion order is {E.torsion_order()}.")
+        for p in res:
+            if E.has_good_reduction(p):
+                if E.ap(p)%p == 0:
+                    redstr = f"supersingular reduction with a_p={E.ap(p)}"
+                else:
+                    if E.Np(p)%p == 0:
+                        redstr = f"good ordinary anomalous reduction"
+                    else:
+                        redstr = f"good ordinary non-anomalous reduction"
+            elif E.has_split_multiplicative_reduction(p):
+                redstr = f"split multiplicative reduction"
+            elif E.has_nonsplit_multiplicative_reduction(p):
+                redstr = f"non-split multiplicative reduction"
+            else:
+                redstr = f"additive multiplicative reduction"
+            print(f" * At {p=}, the curve has {redstr}.")
+            if E.galois_representation().is_irreducible(p):
+                if E.galois_representation().is_surjective(p):
+                    print(f"   The Galois representation on E[{p}] is surjective.")
+                else:
+                    print(f"   The Galois representation E[{p}] is irreducible, but not surjective.")
+            else:
+                print(f"   The Galois representation E[{p}] is reducible.")
 
     return res
 
