@@ -160,6 +160,30 @@ def burungale_skinner_tian_wan_thm15(E,p, verbosity=0):
             else:
                 return False
 
+# multiplicative case
+def castella_thmAprime(E, p, verbosity=0):
+    """
+    Check if the conditions of Theorem A' in the erratum to [C]
+    are verified.
+    """
+    if p==2:
+        return False
+    elif not E.has_multiplicative_reduction(p):
+        return False
+    elif not E.galois_representation().is_irreducible(p):
+        return False
+    elif has_padic_ptorsion_point(E,p):
+        return False
+    elif E.analytic_rank() != 1:
+        return False
+    else:
+        qs = [q for q in E.conductor().prime_divisors() if E.has_non_split_multiplicative_reduction(q) and q!=p]
+        if len(qs)==0:
+            return False
+        return any(E.j_invariant().valuation(q)%p!=0 for q in qs) # check if E[p] is ramified at one q
+
+
+# ---------------- reducible cases --------------
 
 def has_padic_ptorsion_point(E, p):
     """
@@ -223,7 +247,7 @@ def has_padic_ptorsion_point(E, p):
         # maps to zero.
 
 
-def castella_grossi_lee_skinner_thmf(E, p, verbosit=0):
+def castella_grossi_lee_skinner_thmf(E, p, verbosity=0):
     """
     Check if the conditions of Theorem F in [CGLS] hold
     if so BDS_p(E) holds.
@@ -234,7 +258,7 @@ def castella_grossi_lee_skinner_thmf(E, p, verbosit=0):
         return False
     elif E.torsion_order()%p == 0:
         return False
-    elif E.analytic_order() > 2:
+    elif E.analytic_rank() > 2:
         return False
     else:
         # check if phi|G_Qp is 1 or omega:
@@ -256,9 +280,32 @@ def castella_grossi_lee_skinner_thmf(E, p, verbosit=0):
                 return True
         return False
 
+def castella_grossi_skinner_thmd(E, p , verbosity=0):
+    """
+    Check if the coditions in Theorem D in [CGS] hold
+    If so BDS_p(E) holds.
+    """
+    if p==2:
+        return False
+    elif E.galois_representation().is_irreducible(p):
+        return False
+    elif E.analytic_rank() > 1:
+        return False
+    elif E.conductor()%p == 0:
+        return False
+    else:
+        # check if phi|G_Qp is 1 or omega:
+        if has_padic_ptorsion_point(E,p):
+            return False
+        phis = E.isogenies_prime_degree(p)
+        assert( len(phis)>0 )
+        Cs = [phi.codomain() for phi in phis]
+        if any(has_padic_ptorsion_point(C,p) for C in Cs):
+            return False
 
-# unpublished preprint, strictly stronger than castella_grossi_lee_skinner_thmf
-def keller_yin_thmc(E, p, verbosit=0):
+
+# currently (July 2026) unpublished preprint, strictly stronger than castella_grossi_lee_skinner_thmf
+def keller_yin_thmc(E, p, verbosity=0):
     """
     Check if the conditions of Theorem C in [KY] hold
     if so BDS_p(E) holds.
@@ -272,6 +319,7 @@ def keller_yin_thmc(E, p, verbosit=0):
     else:
         return True
 
+# ---------------- cm case --------------
 
 def _new_prove_bsd_cm(E, verbosity=0):
     non_max_j_invs = [ -12288000, 54000, 287496, 16581375 ]
@@ -350,7 +398,7 @@ def new_prove_bsd(E,
         # divisible by p
         # Kato's theorem [K] 14.5 requires p>2, potentially good reduction and
         # surjectivity of the representation on E[p]
-        primes_to_test = Set(E2.galois_representation().not_surjective())
+        primes_to_test = Set(E2.galois_representation().non_surjective())
         primes_to_test += Set(E2.sha().an().prime_divisors())
         primes_to_test += Set(E2.j_invariant().denominator().prime_divisors())
         primes_to_test = primes_to_test.difference(Set([2]))
@@ -359,6 +407,19 @@ def new_prove_bsd(E,
 
     if verbosity > 1:
         print(f"Primes left to test: {primes_to_test}")
+
+    for p in primes_to_test:
+        # is any of the criteria above apply, go to the next prime
+        # otherwise append it to the result in res
+        if not any([
+            burungale_skinner_tian_wan_thm19(E, p, verbosity=verbosity), #unpublished
+            burungale_skinner_tian_wan_thm15(E, p, verbosity=verbosity), #unpublished
+            castella_grossi_lee_skinner_thmf(E, p, verbosity=verbosity),
+            keller_yin_thmc(E, p, verbosity=verbosity), # unpublished
+            castella_thmAprime(E, p , verbosity=verbosity),
+            castella_grossi_skinner_thmd(E, p , verbosity=verbosity)
+        ] ):
+            res.append(p)
 
     return res
 
@@ -369,8 +430,9 @@ if __name__ == "__main__":
                '26b', '438e1', '960d1', '66b3']:
         E = EllipticCurve(la)
         print(f"Curve: {E.label()} \n old prove_BSD :: {E.prove_BSD()} \n")
-        if E.analytic_rank() < 2:
-              print(f"{_new_prove_bsd_2(E, E.analytic_rank(), verbosity=2)}\n")
-        print(has_padic_ptorsion_point(E,3), has_padic_ptorsion_point(E,5), has_padic_ptorsion_point(E, 43))
-
+        if E.analytic_rank() == 0:
+            print(f"{new_prove_bsd(E, 2)}")
+        elif E.analytic_rank() == 1:
+            print(f"{_new_prove_bsd_2(E, E.analytic_rank(), verbosity=2)}\n")
+        print("\n")
     print("Done.")
