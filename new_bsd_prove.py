@@ -23,7 +23,6 @@ and the one for the lmfdb: https://github.com/LMFDB/lmfdb/issues/7045
 Issues still to consider:
 * Add examples, documentation and test it.
 * We have to check if all is proven. sha.an needs the Manin constant to be 1 or 2.
-* Should check if L>0 for full BSD.
 * Find more resources, decide if unpublished preprints are ok.
 * Should we check an=rank for rank 2 and 3 curves?
 * check what needs caching to avoid recalculation.
@@ -721,6 +720,16 @@ def new_prove_bsd(E,
         if verbosity > 0:
             print(f"Cannot verify BSD(E,p) for any prime p as the analytic rank is > 1.")
         return Primes()
+
+    # now analytic rank = algebraic rank by Kolyvagin
+    # full BSD is now sign + BSD(E,p) for all primes p
+    shan = E.sha().an()  # this is cached and reused later
+    # in our situation this is checked to be an integer
+    # BSD has the correct sign if and only if this is positive.
+    if shan < 0:
+        print(f"It appears that BSD does not holds for this curve because "
+                  f"the predicted analytic order of Sha is negative: {shan}. "
+                  f"This is either a counterexample to BSD or, more likely, a bug. ")
 
     # first treat CM curves
     if E.has_cm():
