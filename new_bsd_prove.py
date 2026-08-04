@@ -199,7 +199,7 @@ def shark_implementation(E, p, verbosity=0):
     Uses the implemented function p_primary_bound
     based on [SW].
     If Sha[p] is non-trivial, this will never prove BSD.
-    Otherwise it proves it as long as the dvisibility in
+    Otherwise it proves it as long as the divisibility in
     the main conjecture (a la Kato) is known.
 
     This can be slow for large conductor as it needs
@@ -796,36 +796,37 @@ def new_prove_bsd(E,
         if E.has_cm():
             print(f" E has complex multiplication with discriminant {E.cm_discriminant()}.")
         if E != E2:
-            print(f" We changed curve to the isogenous curve {E2.label()}.")
+            print(f" We changed curve to the isogenous curve E' = {E2.label()}.")
         tam = ""
-        for ell in E.conductor().prime_divisors():
-            tam += f"c_{ell} = {E.tamagawa_number(ell)}, "
+        for ell in E2.conductor().prime_divisors():
+            tam += f"c_{ell} = {E2.tamagawa_number(ell)}, "
         tam = tam[:-2] # delete trailing ","
-        print(f" The Tamagawa numbers are {tam}.")
-        print(f" The torsion order is {E.torsion_order()}.")
+        print(f" The Tamagawa numbers of E' are {tam}.")
+        print(f" The torsion order of E' is {E2.torsion_order()}.")
+        print(f" The analytic order of Sha of E' is {E2.sha().an()}.")
         for p in res:
-            if E.has_good_reduction(p):
-                if E.ap(p)%p == 0:
-                    redstr = f"supersingular reduction with a_p={E.ap(p)}"
+            if E2.has_good_reduction(p):
+                if E2.ap(p)%p == 0:
+                    redstr = f"supersingular reduction with a_p={E2.ap(p)}"
                 else:
-                    if E.Np(p)%p == 0:
+                    if E2.Np(p)%p == 0:
                         redstr = f"good ordinary anomalous reduction"
                     else:
                         redstr = f"good ordinary non-anomalous reduction"
-            elif E.has_split_multiplicative_reduction(p):
+            elif E2.has_split_multiplicative_reduction(p):
                 redstr = f"split multiplicative reduction"
-            elif E.has_nonsplit_multiplicative_reduction(p):
+            elif E2.has_nonsplit_multiplicative_reduction(p):
                 redstr = f"non-split multiplicative reduction"
             else:
                 redstr = f"additive multiplicative reduction"
-            print(f" * At {p=}, the curve has {redstr}.")
-            if E.galois_representation().is_irreducible(p):
-                if E.galois_representation().is_surjective(p):
-                    print(f"   The Galois representation on E[{p}] is surjective.")
+            print(f" * At {p=}, the curve E' has {redstr}.")
+            if E2.galois_representation().is_irreducible(p):
+                if E2.galois_representation().is_surjective(p):
+                    print(f"   The Galois representation on E'[{p}] is surjective.")
                 else:
-                    print(f"   The Galois representation E[{p}] is irreducible, but not surjective.")
+                    print(f"   The Galois representation E'[{p}] is irreducible, but not surjective.")
             else:
-                print(f"   The Galois representation E[{p}] is reducible.")
+                print(f"   The Galois representation E'[{p}] is reducible.")
 
     return res
 
