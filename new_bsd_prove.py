@@ -195,6 +195,39 @@ def stein_wuthrich_thm91(E, p, verbosity=0):
                 print(f"Theorem 9.1 in [SW] proves BSD(E,{p}).")
             return True
 
+def shark_implementation(E, p, verbosity=0):
+    """
+    Uses the implemented function p_primary_bound
+    based on [SW].
+    If Sha[p] is non-trivial, this will never prove BSD.
+    Otherwise it proves it as long as the dvisibility in
+    the main conjecture (a la Kato) is known.
+
+    This can be slow for large conductor as it needs
+    computations with modular symbols.
+    """
+    if p == 2:
+        return False
+    elif E.has_additive_reduction(p):
+        return False
+    elif not E.galois_representation().is_irreducible(p) and not E.galois_representation().is_surjective(p):
+        return False
+    elif E.has_nonsplit_multiplicative_reduction(p) and E.analytic_rank() > 0:
+        return False
+    elif p==3 and E.has_nonsplit_multiplicative_reduction(p):
+        return False
+    elif p==3 and E.conductor()%p != 0 and E.is_supersingular(p):
+        return False
+    elif p==3 and E.analytic_rank() > 0:
+        return False
+    else:
+        e = E.sha().p_primary_bound(p)
+        if e != 0:
+            return False
+        else:
+            if verbosity > 0:
+                print(f"The method in [SW] proves BSD(E,{p}).")
+            return True
 
 def burungale_castella_skinner(E, p, verbosity=0):
     """
@@ -508,8 +541,13 @@ def new_prove_bsd(E,
         Kato's Theorem 14.5 in [K] proves it for all odd primes except {11, 5}.
         Primes left to test: {11, 5}
         Theorem 8.1 in [SW] proves BSD(E,11).
-        Theorem C in [KY] proves BSD(E,5).
-        []
+        BSD(E,p) is not known to hold for the primes [5].
+         E has analytic and algebraic rank 0.
+         The Tamagawa numbers are c_11 = 5.
+         The torsion order is 5.
+         * At p=5, the curve has good ordinary anomalous reduction.
+           The Galois representation E[5] is reducible.
+        [5]
 
 
         sage: new_prove_bsd(EllipticCurve(14a1, verbosity=2)
@@ -517,9 +555,14 @@ def new_prove_bsd(E,
         BSD(E,2) holds thanks to a 2-descent calculation.
         Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 7}.
         Primes left to test: {3, 7}
-        Theorem C in [KY] proves BSD(E,3).
         Theorem 8.1 in [SW] proves BSD(E,7).
-        []
+        BSD(E,p) is not known to hold for the primes [3].
+         E has analytic and algebraic rank 0.
+         The Tamagawa numbers are c_2 = 2, c_7 = 3.
+         The torsion order is 6.
+         * At p=3, the curve has good ordinary anomalous reduction.
+           The Galois representation E[3] is reducible.
+        [3]
 
 
         sage: new_prove_bsd(EllipticCurve(20a1, verbosity=2)
@@ -527,9 +570,14 @@ def new_prove_bsd(E,
         BSD(E,2) holds thanks to a 2-descent calculation.
         Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 5}.
         Primes left to test: {3, 5}
-        Theorem C in [KY] proves BSD(E,3).
         Theorem 8.1 in [SW] proves BSD(E,5).
-        []
+        BSD(E,p) is not known to hold for the primes [3].
+         E has analytic and algebraic rank 0.
+         The Tamagawa numbers are c_2 = 3, c_5 = 2.
+         The torsion order is 6.
+         * At p=3, the curve has good ordinary anomalous reduction.
+           The Galois representation E[3] is reducible.
+        [3]
 
 
         sage: new_prove_bsd(EllipticCurve(50b1, verbosity=2)
@@ -538,8 +586,13 @@ def new_prove_bsd(E,
         Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 5}.
         Primes left to test: {3, 5}
         Theorem F in [CGLS] proves BSD(E,3).
-        Theorem C in [KY] proves BSD(E,5).
-        []
+        BSD(E,p) is not known to hold for the primes [5].
+         E has analytic and algebraic rank 0.
+         The Tamagawa numbers are c_2 = 5, c_5 = 1.
+         The torsion order is 5.
+         * At p=5, the curve has additive multiplicative reduction.
+           The Galois representation E[5] is reducible.
+        [5]
 
 
         sage: new_prove_bsd(EllipticCurve(389a1, verbosity=2)
@@ -552,9 +605,14 @@ def new_prove_bsd(E,
         BSD(E,2) holds thanks to a 2-descent calculation.
         Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 19}.
         Primes left to test: {3, 19}
-        Theorem C in [KY] proves BSD(E,3).
         Theorem 8.1 in [SW] proves BSD(E,19).
-        []
+        BSD(E,p) is not known to hold for the primes [3].
+         E has analytic and algebraic rank 0.
+         The Tamagawa numbers are c_19 = 3.
+         The torsion order is 3.
+         * At p=3, the curve has good ordinary anomalous reduction.
+           The Galois representation E[3] is reducible.
+        [3]
 
 
         sage: new_prove_bsd(EllipticCurve(37a1, verbosity=2)
@@ -576,16 +634,15 @@ def new_prove_bsd(E,
         BSD(E,2) holds thanks to a 2-descent calculation.
         Corollary 1.5 in [J] proves it for all odd primes except {41, 3, 5}.
         Primes left to test: {41, 3, 5}
+        The method in [SW] proves BSD(E,41).
         Theorem D in [CGS] proves BSD(E,5).
-        BSD(E,p) is not known to hold for the primes [41, 3].
+        BSD(E,p) is not known to hold for the primes [3].
          E has analytic and algebraic rank 1.
          The Tamagawa numbers are c_3 = 5, c_41 = 1.
          The torsion order is 5.
-         * At p=41, the curve has split multiplicative reduction.
-           The Galois representation on E[41] is surjective.
          * At p=3, the curve has split multiplicative reduction.
            The Galois representation on E[3] is surjective.
-        [41, 3]
+        [3]
 
 
         sage: new_prove_bsd(EllipticCurve(681b1, verbosity=2)
@@ -608,9 +665,14 @@ def new_prove_bsd(E,
         BSD(E,2) holds thanks to a 2-descent calculation.
         Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 11}.
         Primes left to test: {3, 11}
-        Theorem C in [KY] proves BSD(E,3).
         Theorem 8.1 in [SW] proves BSD(E,11).
-        []
+        BSD(E,p) is not known to hold for the primes [3].
+         E has analytic and algebraic rank 0.
+         The Tamagawa numbers are c_2 = 2, c_3 = 2, c_11 = 1.
+         The torsion order is 2.
+         * At p=3, the curve has additive multiplicative reduction.
+           The Galois representation E[3] is reducible.
+        [3]
 
 
         sage: new_prove_bsd(EllipticCurve(26b1, verbosity=2)
@@ -651,8 +713,6 @@ def new_prove_bsd(E,
         Theorem 8.1 in [SW] proves BSD(E,11).
         Theorem 8.1 in [SW] proves BSD(E,3).
         []
-
-
     """
     # no hope to prove anything if analytic rank is >1
     an = E.analytic_rank()
@@ -713,9 +773,10 @@ def new_prove_bsd(E,
             castella_grossi_lee_skinner_thmf,
             castella_thmaprime,
             castella_grossi_skinner_thmd,
-            burungale_skinner_tian_wan_thm19,  # unpublished
-            burungale_skinner_tian_wan_thm15,  # unpublished
-            keller_yin_thmc,  # unpublished
+            shark_implementation,
+            # burungale_skinner_tian_wan_thm19,  # unpublished
+            # burungale_skinner_tian_wan_thm15,  # unpublished
+            # keller_yin_thmc,  # unpublished
         ]):
             res.append(p)
 
