@@ -542,14 +542,15 @@ def new_prove_bsd(E,
         Theorem 8.1 in [SW] proves BSD(E,11).
         BSD(E,p) is not known to hold for the primes [5].
          E has analytic and algebraic rank 0.
-         The Tamagawa numbers are c_11 = 5.
-         The torsion order is 5.
-         * At p=5, the curve has good ordinary anomalous reduction.
+         The Tamagawa numbers of E are c_11 = 5.
+         The torsion order of E is 5.
+         The analytic order of Sha of E is 1.
+         * At p=5, the curve E has good ordinary anomalous reduction.
            The Galois representation E[5] is reducible.
         [5]
 
 
-        sage: new_prove_bsd(EllipticCurve(14a1, verbosity=2)
+        sage: new_prove_bsd(EllipticCurve(14a2, verbosity=2)
         The two-descent gives the following information: 0 <= rank <= 0,dim Sha[2]/2Sha[4] = 0 and the following points were found: [].
         BSD(E,2) holds thanks to a 2-descent calculation.
         Kato's Theorem 14.5 in [K] proves it for all odd primes except {3, 7}.
@@ -557,9 +558,10 @@ def new_prove_bsd(E,
         Theorem 8.1 in [SW] proves BSD(E,7).
         BSD(E,p) is not known to hold for the primes [3].
          E has analytic and algebraic rank 0.
-         The Tamagawa numbers are c_2 = 2, c_7 = 3.
-         The torsion order is 6.
-         * At p=3, the curve has good ordinary anomalous reduction.
+         The Tamagawa numbers of E are c_2 = 1, c_7 = 6.
+         The torsion order of E is 6.
+         The analytic order of Sha of E is 1.
+         * At p=3, the curve E has good ordinary anomalous reduction.
            The Galois representation E[3] is reducible.
         [3]
 
@@ -572,9 +574,10 @@ def new_prove_bsd(E,
         Theorem 8.1 in [SW] proves BSD(E,5).
         BSD(E,p) is not known to hold for the primes [3].
          E has analytic and algebraic rank 0.
-         The Tamagawa numbers are c_2 = 3, c_5 = 2.
-         The torsion order is 6.
-         * At p=3, the curve has good ordinary anomalous reduction.
+         The Tamagawa numbers of E are c_2 = 3, c_5 = 2.
+         The torsion order of E is 6.
+         The analytic order of Sha of E is 1.
+         * At p=3, the curve E has good ordinary anomalous reduction.
            The Galois representation E[3] is reducible.
         [3]
 
@@ -587,9 +590,10 @@ def new_prove_bsd(E,
         Theorem F in [CGLS] proves BSD(E,3).
         BSD(E,p) is not known to hold for the primes [5].
          E has analytic and algebraic rank 0.
-         The Tamagawa numbers are c_2 = 5, c_5 = 1.
-         The torsion order is 5.
-         * At p=5, the curve has additive multiplicative reduction.
+         The Tamagawa numbers of E are c_2 = 5, c_5 = 1.
+         The torsion order of E is 5.
+         The analytic order of Sha of E is 1.
+         * At p=5, the curve E has additive multiplicative reduction.
            The Galois representation E[5] is reducible.
         [5]
 
@@ -607,9 +611,10 @@ def new_prove_bsd(E,
         Theorem 8.1 in [SW] proves BSD(E,19).
         BSD(E,p) is not known to hold for the primes [3].
          E has analytic and algebraic rank 0.
-         The Tamagawa numbers are c_19 = 3.
-         The torsion order is 3.
-         * At p=3, the curve has good ordinary anomalous reduction.
+         The Tamagawa numbers of E are c_19 = 3.
+         The torsion order of E is 3.
+         The analytic order of Sha of E is 1.
+         * At p=3, the curve E has good ordinary anomalous reduction.
            The Galois representation E[3] is reducible.
         [3]
 
@@ -621,9 +626,10 @@ def new_prove_bsd(E,
         Primes left to test: {37}
         BSD(E,p) is not known to hold for the primes [37].
          E has analytic and algebraic rank 1.
-         The Tamagawa numbers are c_37 = 1.
-         The torsion order is 1.
-         * At p=37, the curve has non-split multiplicative reduction.
+         The Tamagawa numbers of E are c_37 = 1.
+         The torsion order of E is 1.
+         The analytic order of Sha of E is 1.
+         * At p=37, the curve E has non-split multiplicative reduction.
            The Galois representation on E[37] is surjective.
         [37]
 
@@ -637,9 +643,10 @@ def new_prove_bsd(E,
         Theorem D in [CGS] proves BSD(E,5).
         BSD(E,p) is not known to hold for the primes [3].
          E has analytic and algebraic rank 1.
-         The Tamagawa numbers are c_3 = 5, c_41 = 1.
-         The torsion order is 5.
-         * At p=3, the curve has split multiplicative reduction.
+         The Tamagawa numbers of E are c_3 = 5, c_41 = 1.
+         The torsion order of E is 5.
+         The analytic order of Sha of E is 1.
+         * At p=3, the curve E has split multiplicative reduction.
            The Galois representation on E[3] is surjective.
         [3]
 
@@ -652,9 +659,10 @@ def new_prove_bsd(E,
         Theorem 8.1 in [SW] proves BSD(E,227).
         BSD(E,p) is not known to hold for the primes [3].
          E has analytic and algebraic rank 0.
-         The Tamagawa numbers are c_3 = 2, c_227 = 2.
-         The torsion order is 4.
-         * At p=3, the curve has non-split multiplicative reduction.
+         The Tamagawa numbers of E are c_3 = 2, c_227 = 2.
+         The torsion order of E is 4.
+         The analytic order of Sha of E is 9.
+         * At p=3, the curve E has non-split multiplicative reduction.
            The Galois representation on E[3] is surjective.
         [3]
 
@@ -667,9 +675,10 @@ def new_prove_bsd(E,
         Theorem 8.1 in [SW] proves BSD(E,11).
         BSD(E,p) is not known to hold for the primes [3].
          E has analytic and algebraic rank 0.
-         The Tamagawa numbers are c_2 = 2, c_3 = 2, c_11 = 1.
-         The torsion order is 2.
-         * At p=3, the curve has additive multiplicative reduction.
+         The Tamagawa numbers of E are c_2 = 2, c_3 = 2, c_11 = 1.
+         The torsion order of E is 2.
+         The analytic order of Sha of E is 1.
+         * At p=3, the curve E has additive multiplicative reduction.
            The Galois representation E[3] is reducible.
         [3]
 
@@ -797,13 +806,16 @@ def new_prove_bsd(E,
             print(f" E has complex multiplication with discriminant {E.cm_discriminant()}.")
         if E != E2:
             print(f" We changed curve to the isogenous curve E' = {E2.label()}.")
+            estring = "E'"
+        else:
+            estring = "E"
         tam = ""
         for ell in E2.conductor().prime_divisors():
             tam += f"c_{ell} = {E2.tamagawa_number(ell)}, "
         tam = tam[:-2] # delete trailing ","
-        print(f" The Tamagawa numbers of E' are {tam}.")
-        print(f" The torsion order of E' is {E2.torsion_order()}.")
-        print(f" The analytic order of Sha of E' is {E2.sha().an()}.")
+        print(f" The Tamagawa numbers of {estring} are {tam}.")
+        print(f" The torsion order of {estring} is {E2.torsion_order()}.")
+        print(f" The analytic order of Sha of {estring} is {E2.sha().an()}.")
         for p in res:
             if E2.has_good_reduction(p):
                 if E2.ap(p)%p == 0:
@@ -819,14 +831,14 @@ def new_prove_bsd(E,
                 redstr = f"non-split multiplicative reduction"
             else:
                 redstr = f"additive multiplicative reduction"
-            print(f" * At {p=}, the curve E' has {redstr}.")
+            print(f" * At {p=}, the curve {estring} has {redstr}.")
             if E2.galois_representation().is_irreducible(p):
                 if E2.galois_representation().is_surjective(p):
-                    print(f"   The Galois representation on E'[{p}] is surjective.")
+                    print(f"   The Galois representation on {estring}[{p}] is surjective.")
                 else:
-                    print(f"   The Galois representation E'[{p}] is irreducible, but not surjective.")
+                    print(f"   The Galois representation {estring}[{p}] is irreducible, but not surjective.")
             else:
-                print(f"   The Galois representation E'[{p}] is reducible.")
+                print(f"   The Galois representation {estring}[{p}] is reducible.")
 
     return res
 
@@ -834,7 +846,7 @@ def new_prove_bsd(E,
 if __name__ == "__main__":
 
     # produce doc string
-    for la in ['11a', '14a', '20a1', '50b1', '389a',
+    for la in ['11a', '14a2', '20a1', '50b1', '389a',
                '19a', '37a', '123a1', '681b', '198b',
                '26b', '438e1', '960d1', '66b3']:
         E = EllipticCurve(la)
