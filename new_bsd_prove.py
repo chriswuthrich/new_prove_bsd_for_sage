@@ -22,6 +22,7 @@ and the one for the lmfdb: https://github.com/LMFDB/lmfdb/issues/7045
 
 Issues still to consider:
 * Add examples, documentation and test it.
+* Think of adding Heegner index calculations if they help ...
 * We have to check if all is proven. sha.an needs the Manin constant to be 1 or 2.
 * Find more resources, decide if unpublished preprints are ok.
 * Should we check an=rank for rank 2 and 3 curves?
@@ -62,6 +63,13 @@ Preliminary list of references:
 [SW] William Stein, Christian Wuthrich,
     Algorithms for the Arithmetic of Elliptic Curves using Iwasawa Theory,
     Mathematics of Computation 82 (2013), 1757-1792.
+[PR] Bernadette Perrin-Riou,
+    Points de Heegner et dérivées de fonctions L p-adiques,
+    Invent. Math. 89 (1987), 455–510.
+[Ko] Shinichi Kobayashi,
+    The p-adic Gross-Zagier formula for elliptic curves at supersingular primes,
+    Invent math (2013) 191:527–629
+
 
 [BSTW] Ashay Burungale, Christopher Skinner, Ye Tian, Xin Wan,
     Zeta elements for elliptic curves and applications,
@@ -500,7 +508,15 @@ def _new_prove_bsd_cm(E, verbosity=0):
             print(f"Rubin's theorem in [R] proves BSD(E,p) for all p>2.")
         return res
     elif an == 1:
-        return NotImplementedError("This is not implemented yet.")
+        # Corollary 1.4 in [Ko] proves it for all primes except those dividing 2N.
+        # The ordinary case goes back to [PR]
+        res = [] if attwo else [2]
+        for p in E2.conductor().prime_divisors():
+            if p!=2:
+                res.append(p)
+        if verbosity>0:
+            print(f"Kobayashi [Ko] + Perrin-Riou [PR] prove BSD(E,p) for all p except those dividing 2N.")
+        return res
     else: # an> 1
         # We should not be calling this function for curves with analytic rank > 1.
         # This is a bug.
